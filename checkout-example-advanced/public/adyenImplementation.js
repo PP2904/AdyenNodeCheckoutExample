@@ -22,6 +22,9 @@ async function initCheckout() {
             value: 10000,
             currency: "EUR",
           },
+          onConfigSuccess: (data) => {
+            console.log("loaded")
+          }
         },
       },
       onSubmit: (state, component) => {
