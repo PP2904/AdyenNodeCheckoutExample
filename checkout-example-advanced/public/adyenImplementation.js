@@ -33,6 +33,12 @@ async function initCheckout() {
           //onChange: data => {
             //console.log("change")
           //}
+          onConfigSuccess: (data) => {
+            console.log("loaded")
+          },
+          onChange: () => {
+            console.log("changed")
+          },
         },
       },
       onSubmit: (state, component) => {
