@@ -18,10 +18,21 @@ async function initCheckout() {
           hasHolderName: true,
           holderNameRequired: true,
           name: "Credit or debit card",
+          //hideCVC: true,
           amount: {
             value: 10000,
             currency: "EUR",
           },
+          //from https://docs.adyen.com/payment-methods/cards/web-component/#optional-configuration
+          //hasHolderName: true, // Show the cardholder name field.
+          //holderNameRequired: true, // Mark the cardholder name field as required.
+          //billingAddressRequired: true, // Show the billing address input fields and mark them as required.
+
+          //Card Component Event Handlers
+          //from https://docs.adyen.com/payment-methods/cards/web-component/#optional-configuration:~:text=callback.-,Events,-You%20can%20also
+          //onChange: data => {
+            //console.log("change")
+          //}
         },
       },
       onSubmit: (state, component) => {
@@ -40,6 +51,7 @@ async function initCheckout() {
     console.error(error);
     alert("Error occurred. Look at console for details");
   }
+  
 }
 
 
