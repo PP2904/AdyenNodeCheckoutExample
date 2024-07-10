@@ -188,6 +188,12 @@ app.get("/preview", (req, res) =>
   })
 );
 
+/*the type is set from the place i suggested:
+ req.query.type points to the type that is set in the query parameter of the URL
+ */
+
+
+
 // Checkout page (make a payment)
 app.get("/checkout", (req, res) =>
   res.render("checkout", {
