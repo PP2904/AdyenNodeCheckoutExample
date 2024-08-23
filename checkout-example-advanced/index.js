@@ -104,6 +104,7 @@ app.post("/api/initiatePayment", async (req, res) => {
       shopperStatement: "Aceitar o pagamento até 15 dias após o vencimento.Não cobrar juros. Não aceitar o pagamento com cheque",
       // below fields are required for Klarna, line items included
       countryCode: req.body.paymentMethod.type.includes("klarna") ? "DE" : null,
+      countryCode: req.body.paymentMethod.type.includes("paypal") ? "DE" : null,
       shopperReference: "12345",
       shopperEmail: "youremail@email.com",
       shopperLocale: "en_US",
@@ -188,11 +189,10 @@ app.get("/preview", (req, res) =>
   })
 );
 
-/*the type is set from the place i suggested:
+/*Where is the type coming from?
+the type is set from the place i suggested:
  req.query.type points to the type that is set in the query parameter of the URL
  */
-
-
 
 // Checkout page (make a payment)
 app.get("/checkout", (req, res) =>
