@@ -93,6 +93,7 @@ app.get("/preview", (req, res) =>
 
 // Checkout page (make a payment)
 app.get("/checkout", (req, res) =>
+  console.log(req),
   res.render("checkout", {
     type: req.query.type,
     clientKey: process.env.ADYEN_CLIENT_KEY

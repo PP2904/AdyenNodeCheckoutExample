@@ -11,7 +11,7 @@ async function initCheckout() {
       clientKey,
       locale: "en_US",
       environment: "test",
-      showPayButton: true,
+      showPayButton: false,
       paymentMethodsConfiguration: {
         ideal: {
           showImage: true,
@@ -21,9 +21,9 @@ async function initCheckout() {
           holderNameRequired: true,
           name: "Credit or debit card",
           //hideCVC: true,
-          //showPayButton: false,
+          showPayButton: false,
           amount: {
-            value: 10000,
+            value: 999,
             currency: "EUR",
           },
           //from https://docs.adyen.com/payment-methods/cards/web-component/#optional-configuration

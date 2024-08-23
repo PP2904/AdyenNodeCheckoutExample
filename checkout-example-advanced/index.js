@@ -182,6 +182,13 @@ app.all("/api/handleShopperRedirect", async (req, res) => {
 // Index (select a demo)
 app.get("/", (req, res) => res.render("index"));
 
+// Cart (continue to preview for 2 Step)
+app.get("/preview2Step", (req, res) =>
+  res.render("preview2Step", {
+    type: req.query.type,
+  })
+);
+
 // Cart (continue to checkout)
 app.get("/preview", (req, res) =>
   res.render("preview", {
@@ -201,6 +208,15 @@ app.get("/checkout", (req, res) =>
     clientKey: process.env.ADYEN_CLIENT_KEY,
   })
 );
+
+// Checkout page 2 step (make a payment)
+app.get("/checkout2Step", (req, res) =>
+  res.render("checkout2Step", {
+    type: req.query.type,
+    clientKey: process.env.ADYEN_CLIENT_KEY,
+  })
+);
+
 
 // Result page
 app.get("/result/:type", (req, res) =>
