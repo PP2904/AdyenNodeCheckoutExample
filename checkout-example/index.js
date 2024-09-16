@@ -66,7 +66,7 @@ app.post("/api/sessions", async (req, res) => {
       lineItems: [
         {quantity: 1, amountIncludingTax: 5000 , description: "Sunglasses"},
         {quantity: 1, amountIncludingTax: 5000 , description: "Headphones"}
-      ] 
+      ]
     });
 
     res.json(response);
@@ -90,7 +90,7 @@ app.get("/preview", (req, res) =>
     type: req.query.type,
   })
 );
-
+/* 
 // Checkout page (make a payment)
 app.get("/checkout", (req, res) =>
   console.log(req),
@@ -98,7 +98,7 @@ app.get("/checkout", (req, res) =>
     type: req.query.type,
     clientKey: process.env.ADYEN_CLIENT_KEY
   })
-);
+); */
 
 // Result page
 app.get("/result/:type", (req, res) =>

@@ -39,8 +39,8 @@ async function initCheckout() {
           onChange: () => {
             console.log("changed")
           },
-          /* //click to pay config
-          clickToPayConfiguration: {
+          //click to pay config
+          /* clickToPayConfiguration: {
             //Card PAN enrolled for CTP for MC: 5186001700008785
             merchantDisplayName: 'YOUR_MERCHANT_NAME',
             shopperEmail: 'peter.pfrommer@adyen.com' // Used to recognize your shopper's Click to Pay account.

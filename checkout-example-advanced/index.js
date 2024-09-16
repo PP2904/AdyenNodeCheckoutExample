@@ -106,12 +106,17 @@ app.post("/api/initiatePayment", async (req, res) => {
       countryCode: req.body.paymentMethod.type.includes("klarna") ? "DE" : null,
       countryCode: req.body.paymentMethod.type.includes("paypal") ? "DE" : null,
       shopperReference: "12345",
-      shopperEmail: "youremail@email.com",
+      //shopperEmail: "youremail@email.com",
+      shopperEmail: "peter.pfrommer@adyen.com",
       shopperLocale: "en_US",
       lineItems: [
         {quantity: 1, amountIncludingTax: 5000 , description: "Sunglasses"},
         {quantity: 1, amountIncludingTax: 5000 , description: "Headphones"}
       ],
+      //additionalData fields for advanced flow
+     /*  additionalData:{
+        "authorisationType":"PreAuth"
+        }, */
     });
 
     res.json(response);
