@@ -9,9 +9,15 @@
     <div class="payment-container">
       <div id={{type}} class="payment"></div>
     </div>
-    <button class="button"> Next </button>
+    <button class="button" id="nextButton"> Next </button>
   </div>
 </div>
 
 {{!-- Adyen Component client code --}}
 <script type="text/javascript" src="../adyenImplementation2Step.js"></script>
+
+<script type="text/javascript">
+  document.getElementById('nextButton').addEventListener('click', function() {
+    window.location.href = '/preview2Step'; // Adjust the URL based on your routing
+  });
+</script>
