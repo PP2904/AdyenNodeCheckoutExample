@@ -43,7 +43,7 @@ async function initCheckout() {
           clickToPayConfiguration: {
             //Card PAN enrolled for CTP for MC: 5186001700008785
             merchantDisplayName: 'YOUR_MERCHANT_NAME',
-            shopperEmail: 'peter.pfrommer@adyen.com' // Used to recognize your shopper's Click to Pay account.
+            shopperEmail: 'pfrommer.peter@gmail.com' // Used to recognize your shopper's Click to Pay account.
           }
         },
         paypal: {

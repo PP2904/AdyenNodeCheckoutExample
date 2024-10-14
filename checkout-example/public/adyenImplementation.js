@@ -51,13 +51,19 @@ async function createAdyenCheckout(session) {
                 showImage: true
             },
             card: {
+              //click to pay config
+          clickToPayConfiguration: {
+            //Card PAN enrolled for CTP for MC: 5186001700008785
+            merchantDisplayName: 'PeterPEcom',
+            shopperEmail: 'pfrommer.peter@gmail.com' // Used to recognize your shopper's Click to Pay account.
+          },
                 hasHolderName: true,
                 holderNameRequired: true,
                 name: "Credit or debit card",
                 amount: {
                     value: 10000,
                     currency: "EUR"
-                }
+                },
             },
             paypal: {
                 amount: {

@@ -55,6 +55,8 @@ async function createAdyenCheckout(session) {
         showPayButton: true,
         session: session,
         onPaymentCompleted: (result, component) => {
+            //here you can get the sessionResult
+            console.log("here is the sessionResult", result)
             handleServerResponse(result, component);
         },
         onError: (error, component) => {
@@ -64,6 +66,7 @@ async function createAdyenCheckout(session) {
 
 
     const checkout = await AdyenCheckout(configuration)
+    //here you can get the sessionId from 
     console.log("this is adyenCheckout ", checkout)
       const dropin = await new Dropin(checkout, {
         paymentMethodComponents: [Card], // Only needed with tree-shakable npm package
@@ -78,7 +81,9 @@ async function createAdyenCheckout(session) {
               amount: {
                   value: 10000,
                   currency: "EUR"
-              }
+              },
+              //change placeholder names in checkout v6
+              placeholders: { cardNumber: 'HansOtto', expiryDate: '📅' }
           },
           paypal: {
               amount: {
