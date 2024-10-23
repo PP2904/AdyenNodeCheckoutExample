@@ -87,6 +87,8 @@ app.post("/api/initiatePayment", async (req, res) => {
         //  nativeThreeDS: "preferred"
         //}
       },
+      //special handling for Blik
+      //paymentMethod: req.body.paymentMethod.type.includes("blik") ? { type: "blik"} : req.body.paymentMethod,
       returnUrl: `${protocol}://${localhost}/api/handleShopperRedirect?orderRef=${orderRef}`, // required for 3ds2 redirect flow
       // special handling for boleto
       paymentMethod: req.body.paymentMethod.type.includes("boleto")
@@ -105,6 +107,9 @@ app.post("/api/initiatePayment", async (req, res) => {
       // below fields are required for Klarna, line items included
       countryCode: req.body.paymentMethod.type.includes("klarna") ? "DE" : null,
       countryCode: req.body.paymentMethod.type.includes("paypal") ? "DE" : null,
+      //blik
+      countryCode: req.body.paymentMethod.type.includes("blik") ? "PL" : null,
+      blikCode: "777987",
       shopperReference: "12345",
       //shopperEmail: "youremail@email.com",
       shopperEmail: "peter.pfrommer@adyen.com",
@@ -292,6 +297,8 @@ function findCurrency(type) {
     case "boletobancario":
     case "boletobancario_santander":
       return "BRL";
+    case "blik":
+      return "PLN";
     default:
       return "EUR";
   }

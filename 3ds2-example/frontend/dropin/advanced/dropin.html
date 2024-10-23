@@ -45,6 +45,21 @@
         <button class="reset-btn">Start Over</button>
       </section>
     </main>
+    
+    <!-- Add the script here to log selected radio button -->
+    <script>
+      // Get all radio buttons with the name 'flow'
+      const flowRadios = document.querySelectorAll('input[name="flow"]');
+
+      // Add an event listener to each radio button
+      flowRadios.forEach(radio => {
+        radio.addEventListener('change', (event) => {
+          // Log the value of the selected radio button
+          console.log(`Selected flow: ${event.target.value}`);
+        });
+      });
+    </script>
+
     <script type="module" src="./dropin.js"></script>
   </body>
 </html>

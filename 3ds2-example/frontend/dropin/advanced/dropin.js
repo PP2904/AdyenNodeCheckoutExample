@@ -17,6 +17,7 @@ const dropinInit = async () => {
 
     const paymentDetailsResponse = await postDoPaymentDetails(requestData);
 
+    console.log("payments request: ", requestData)
     console.log("/payments/details response:", paymentDetailsResponse);
 
     renderResultTemplate(paymentDetailsResponse.resultCode);
@@ -42,17 +43,31 @@ const dropinInit = async () => {
     const onSubmit = async (state, dropinComponent) => {
       if (state.isValid) {
         const flow = getFlowType(); // native or redirect
+        console.log("flow type: ", flow);
+        
+        // Send the payment data to the server
         const paymentResponse = await postDoPayment(state.data, { url, flow });
+    
+        // Handle different response codes
         if (paymentResponse.resultCode === "Authorised") {
           console.log(`response is ${paymentResponse.resultCode}, unmounting component and rendering result`);
           dropinComponent.unmount();
           renderResultTemplate(paymentResponse.resultCode);
         } else {
-          console.log("paymentResponse includes an action, passing action to dropin.handleAction function.");
+          // Log the entire action object for debugging
+          console.log("paymentResponse includes an action, action object: ", paymentResponse.action);
+    
+          // Check if the action type is "redirect" and log the URL
+          if (paymentResponse.action && paymentResponse.action.type === "redirect") {
+            console.log("Redirect URL: ", paymentResponse.action.url);
+          }
+    
+          // Handle the action using the dropin component
           dropinComponent.handleAction(paymentResponse.action); // pass the response action object into the dropin HandleAction function
         }
       }
     };
+    
 
     // create configuration object to pass into AdyenCheckout
     const checkoutConfig = {

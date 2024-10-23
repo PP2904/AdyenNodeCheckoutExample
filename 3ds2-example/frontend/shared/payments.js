@@ -10,6 +10,9 @@ export const postDoPayment = async (data, { url, flow }) => {
   console.log(`Do ${paymentsUrl} POST request with: ${data}`);
 
   const requestBody = { data, url };
+  const clonedRequestBody = JSON.parse(JSON.stringify(requestBody)); // Clone the object
+console.log("Cloned Payment Request Body:", clonedRequestBody.data); // Logs the static snapshot
+console.dir("console.dir: ", clonedRequestBody.data); // Logs it in an expandable format
   const response = await fetch(paymentsUrl, {
     method: "POST",
     headers: {
@@ -17,6 +20,7 @@ export const postDoPayment = async (data, { url, flow }) => {
     },
     body: JSON.stringify(requestBody),
   });
+  console.log("payments response ", response)
   return await response.json();
 };
 
