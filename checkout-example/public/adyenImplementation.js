@@ -1,22 +1,26 @@
-const clientKey = document.getElementById("clientKey").innerHTML;
-const type = document.getElementById("type").innerHTML;
+const clientKey = document.getElementById("clientKey").textContent;
+const typeList = JSON.parse(document.getElementById("typeList").textContent);
+
+// Retrieve the selected locale and currency from localStorage
+const selectedLocale = localStorage.getItem("selectedLocale") || "en_US";
+const selectedCurrency = localStorage.getItem("selectedCurrency") || "USD";
 
 // Used to finalize a checkout call in case of redirect
 const urlParams = new URLSearchParams(window.location.search);
-const sessionId = urlParams.get('sessionId'); // Unique identifier for the payment session
+const sessionId = urlParams.get('sessionId');
 const redirectResult = urlParams.get('redirectResult');
-
 
 async function startCheckout() {
   try {
-    // Init Sessions
-    const checkoutSessionResponse = await callServer("/api/sessions?type=" + type);
+    const checkoutSessionResponse = await callServer("/api/sessions");
 
-    // Create AdyenCheckout using Sessions response
-    const checkout = await createAdyenCheckout(checkoutSessionResponse)
+    const checkout = await createAdyenCheckout(checkoutSessionResponse);
 
-  // Create an instance of Drop-in and mount it
-    checkout.create(type).mount(document.getElementById(type));
+    // Dynamically create and mount components for each type in typeList
+    typeList.forEach(type => {
+      const elementId = `#${type}`;
+      checkout.create(type).mount(elementId);
+    });
 
   } catch (error) {
     console.error(error);
@@ -24,81 +28,65 @@ async function startCheckout() {
   }
 }
 
-// Some payment methods use redirects. This is where we finalize the operation
+// Finalize checkout for redirects
 async function finalizeCheckout() {
-    try {
-        // Create AdyenCheckout re-using existing Session
-        const checkout = await createAdyenCheckout({id: sessionId});
-
-        // Submit the extracted redirectResult (to trigger onPaymentCompleted() handler)
-        checkout.submitDetails({details: {redirectResult}});
-    } catch (error) {
-        console.error(error);
-        alert("Error occurred. Look at console for details");
-    }
+  try {
+    const checkout = await createAdyenCheckout({ id: sessionId });
+    checkout.submitDetails({ details: { redirectResult } });
+  } catch (error) {
+    console.error(error);
+    alert("Error occurred. Look at console for details");
+  }
 }
 
 async function createAdyenCheckout(session) {
-  
-    const configuration = {
-        clientKey,
-        locale: "en_US",
-        environment: "test",  // change to live for production
-        showPayButton: true,
-        session: session,
-        paymentMethodsConfiguration: {
-            ideal: {
-                showImage: true
-            },
-            card: {
-              //click to pay config
-          clickToPayConfiguration: {
-            //Card PAN enrolled for CTP for MC: 5186001700008785
-            merchantDisplayName: 'PeterPEcom',
-            shopperEmail: 'pfrommer.peter@gmail.com' // Used to recognize your shopper's Click to Pay account.
-          },
-                hasHolderName: true,
-                holderNameRequired: true,
-                name: "Credit or debit card",
-                amount: {
-                    value: 10000,
-                    currency: "EUR"
-                },
-            },
-            paypal: {
-                amount: {
-                    currency: "USD",
-                    value: 10000
-                },
-                environment: "test",
-                countryCode: "US"   // Only needed for test. This will be automatically retrieved when you are in production.
-            }
-        },
-        onPaymentCompleted: (result, component) => {
-            handleServerResponse(result, component);
-        },
-        onError: (error, component) => {
-            console.error(error.name, error.message, error.stack, component);
-        }
-    };
+  const configuration = {
+    clientKey,
+    locale: selectedLocale, // Set locale based on selection
+    environment: "test",
+    showPayButton: true,
+    session: session,
+    paymentMethodsConfiguration: {
+      ideal: { 
+        showImage: true,
+        amount: { currency: selectedCurrency, value: 10000 },
+      },
+      card: {
+        hasHolderName: true,
+        holderNameRequired: true,
+        name: "Credit or debit card",
+        amount: { currency: selectedCurrency, value: 10000 },
+      },
+      paypal: {
+        amount: { currency: selectedCurrency, value: 10000 },
+        environment: "test",
+      },
+      twint: {
+        amount: { currency: selectedCurrency, value: 10000 },
+      }
+    },
+    onPaymentCompleted: (result, component) => {
+      handleServerResponse(result, component);
+    },
+    onError: (error, component) => {
+      console.error(error.name, error.message, error.stack, component);
+    }
+  };
 
-    return new AdyenCheckout(configuration);
+  return new AdyenCheckout(configuration);
 }
 
-// Calls your server endpoints
+// Function to make calls to the server
 async function callServer(url, data) {
   const res = await fetch(url, {
     method: "POST",
     body: data ? JSON.stringify(data) : "",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: { "Content-Type": "application/json" }
   });
-
   return await res.json();
 }
 
-// Handles responses sent from your server to the client
+// Handle server responses
 function handleServerResponse(res, component) {
   if (res.action) {
     component.handleAction(res.action);
@@ -121,10 +109,9 @@ function handleServerResponse(res, component) {
   }
 }
 
+// Start checkout process
 if (!sessionId) {
-    startCheckout();
-}
-else {
-    // existing session: complete Checkout
-    finalizeCheckout();
+  startCheckout();
+} else {
+  finalizeCheckout();
 }

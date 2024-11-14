@@ -1,107 +1,98 @@
-<div class='main-container'>
+<div class="main-container">
   <div class="info">
     <h1>Select a demo</h1>
     <p>Click to view an interactive example of a PCI-compliant UI integration for online payments.</p>
-    <p>
-      Make sure the payment method you want to use are enabled for your account.
-      Refer <a href="https://docs.adyen.com/payment-methods#add-payment-methods-to-your-account">the documentation</a>
-      to add missing
-      payment methods.
-    </p>
-    <p>To learn more about client-side integration solutions, check out <a href="https://docs.adyen.com/checkout">Online
-        payments.</a></p>
+    <p>To add missing payment methods, refer to the <a href="https://docs.adyen.com/payment-methods#add-payment-methods-to-your-account">documentation</a>.</p>
   </div>
+
+  <!-- Country dropdown with flags and associated currencies -->
+  <div class="country-select">
+    <label for="country-dropdown">Choose your country:</label>
+    <select id="country-dropdown" onchange="setCountry(this)">
+      <option value="US" data-locale="en_US" data-currency="USD">🇺🇸 United States</option>
+      <option value="NL" data-locale="nl_NL" data-currency="EUR">🇳🇱 Netherlands</option>
+      <option value="CH" data-locale="de_CH" data-currency="CHF">🇨🇭 Switzerland</option>
+      <option value="FR" data-locale="fr_FR" data-currency="EUR">🇫🇷 France</option>
+      <option value="DE" data-locale="de_DE" data-currency="EUR">🇩🇪 Germany</option>
+      <option value="IT" data-locale="it_IT" data-currency="EUR">🇮🇹 Italy</option>
+      <!-- Add more countries as needed -->
+    </select>
+  </div>
+
+  <!-- Store the selected country code, locale, and currency for use in adyenImplementation.js -->
+  <input type="hidden" id="selected-country-code">
+  <input type="hidden" id="selected-locale">
+  <input type="hidden" id="selected-currency">
+
   <ul class="integration-list">
     <li class="integration-list-item">
-      <a href="/preview?type=dropin" class="integration-list-item-link">
-        <div class="title-container">
-          <p class="integration-list-item-title">Drop-in</p>
-        </div>
+      <a href="/checkout?type=dropin" class="integration-list-item-link">
+        <p class="integration-list-item-title">Drop-in</p>
       </a>
     </li>
     <li class="integration-list-item">
-      <a href="/preview?type=card" class="integration-list-item-link">
-        <div class="title-container">
-          <p class="integration-list-item-title">Card</p>
-        </div>
+      <a href="/checkout?type=card" class="integration-list-item-link">
+        <p class="integration-list-item-title">Card</p>
       </a>
     </li>
     <li class="integration-list-item">
-      <a href="/preview?type=ideal" class="integration-list-item-link">
-        <div class="title-container">
-          <p class="integration-list-item-title">iDEAL</p>
-        </div>
+      <a href="/checkout?type=ideal" class="integration-list-item-link">
+        <p class="integration-list-item-title">iDEAL</p>
       </a>
     </li>
+    <!-- Additional buttons for other payment types -->
+
+    <!-- New button for Multiple Components -->
     <li class="integration-list-item">
-      <a href="/preview?type=dotpay" class="integration-list-item-link">
-        <div class="title-container">
-          <p class="integration-list-item-title">Dotpay</p>
-        </div>
+      <a href="/checkout?type=multiple" class="integration-list-item-link">
+        <p class="integration-list-item-title">Multiple Components</p>
       </a>
     </li>
+
+    <!-- New button for TWINT -->
     <li class="integration-list-item">
-      <a href="/preview?type=giropay" class="integration-list-item-link">
-        <div class="title-container">
-          <p class="integration-list-item-title">giropay</p>
-        </div>
-      </a>
-    </li>
-    <li class="integration-list-item">
-      <a href="/preview?type=sepadirectdebit" class="integration-list-item-link">
-        <div class="title-container">
-          <p class="integration-list-item-title">SEPA Direct Debit</p>
-        </div>
-      </a>
-    </li>
-    <li class="integration-list-item">
-      <a href="/preview?type=directEbanking" class="integration-list-item-link">
-        <div class="title-container">
-          <p class="integration-list-item-title">SOFORT</p>
-        </div>
-      </a>
-    </li>
-    <li class="integration-list-item">
-      <a href="/preview?type=ach" class="integration-list-item-link">
-        <div class="title-container">
-          <p class="integration-list-item-title">ACH</p>
-        </div>
-      </a>
-    </li>
-    <li class="integration-list-item">
-      <a href="/preview?type=alipay" class="integration-list-item-link">
-        <div class="title-container">
-          <p class="integration-list-item-title">Alipay</p>
-        </div>
-      </a>
-    </li>
-    <li class="integration-list-item">
-      <a href="/preview?type=klarna_paynow" class="integration-list-item-link">
-        <div class="title-container">
-          <p class="integration-list-item-title">Klarna - Pay now</p>
-        </div>
-      </a>
-    </li>
-    <li class="integration-list-item">
-      <a href="/preview?type=klarna" class="integration-list-item-link">
-        <div class="title-container">
-          <p class="integration-list-item-title">Klarna - Pay later</p>
-        </div>
-      </a>
-    </li>
-    <li class="integration-list-item">
-      <a href="/preview?type=klarna_account" class="integration-list-item-link">
-        <div class="title-container">
-          <p class="integration-list-item-title">Klarna - Slice it</p>
-        </div>
-      </a>
-    </li>
-    <li class="integration-list-item">
-      <a href="/preview?type=boletobancario_santander" class="integration-list-item-link">
-        <div class="title-container">
-          <p class="integration-list-item-title">Boleto Bancário</p>
-        </div>
+      <a href="/checkout?type=twint" class="integration-list-item-link">
+        <p class="integration-list-item-title">TWINT</p>
       </a>
     </li>
   </ul>
 </div>
+
+<script>
+// JavaScript to handle state management for country, locale, and currency
+window.onload = function () {
+  // Load saved values from localStorage, or default to the first country in the dropdown
+  const savedCountry = localStorage.getItem("selectedCountry") || "US";
+  const savedLocale = localStorage.getItem("selectedLocale") || "en_US";
+  const savedCurrency = localStorage.getItem("selectedCurrency") || "USD";
+
+  // Set the dropdown to the saved country
+  document.getElementById("country-dropdown").value = savedCountry;
+
+  // Set hidden inputs with saved values
+  document.getElementById("selected-country-code").value = savedCountry;
+  document.getElementById("selected-locale").value = savedLocale;
+  document.getElementById("selected-currency").value = savedCurrency;
+
+  // Update the storage and hidden fields on dropdown change
+  setCountry(document.getElementById("country-dropdown"));
+};
+
+// Function to set country, locale, and currency when a country is selected
+function setCountry(selectElement) {
+  const selectedOption = selectElement.options[selectElement.selectedIndex];
+  const countryCode = selectedOption.value;
+  const locale = selectedOption.getAttribute("data-locale");
+  const currency = selectedOption.getAttribute("data-currency");
+
+  // Update hidden input values
+  document.getElementById("selected-country-code").value = countryCode;
+  document.getElementById("selected-locale").value = locale;
+  document.getElementById("selected-currency").value = currency;
+
+  // Store the selected country, locale, and currency in localStorage
+  localStorage.setItem("selectedCountry", countryCode);
+  localStorage.setItem("selectedLocale", locale);
+  localStorage.setItem("selectedCurrency", currency);
+}
+</script>
