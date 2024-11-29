@@ -4,7 +4,7 @@ const hbs = require("express-handlebars");
 const dotenv = require("dotenv");
 const morgan = require("morgan");
 const { uuid } = require("uuidv4");
-const { hmacValidator } = require('@adyen/api-library');
+const { hmacValidator } = require("@adyen/api-library");
 const { Client, Config, CheckoutAPI } = require("@adyen/api-library");
 
 const app = express();
@@ -68,8 +68,33 @@ app.post("/api/sessions", async (req, res) => {
 
 /* ################# CLIENT SIDE ENDPOINTS ###################### */
 
+// Serve the index page
 app.get("/", (req, res) => res.render("index"));
 
+// Serve the preview page
+app.get("/preview", (req, res) => {
+  const type = req.query.type;
+
+  // Define payment-specific configurations
+  const paymentConfigs = {
+    card: { countryCode: "US", currency: "USD" },
+    paypal: { countryCode: "US", currency: "USD" },
+    ideal: { countryCode: "NL", currency: "EUR" },
+    twint: { countryCode: "CH", currency: "CHF" }, // Specific config for TWINT
+  };
+
+  const selectedConfig = paymentConfigs[type] || { countryCode: "NL", currency: "EUR" };
+
+  // Render the preview page with dynamic data
+  res.render("preview", {
+    clientKey: process.env.ADYEN_CLIENT_KEY,
+    type: type || "default", // Ensure a type is passed
+    countryCode: selectedConfig.countryCode,
+    currency: selectedConfig.currency,
+  });
+});
+
+// Serve the checkout page
 app.get("/checkout", (req, res) => {
   const type = req.query.type;
 
@@ -103,12 +128,14 @@ app.get("/checkout", (req, res) => {
   }
 });
 
+// Serve the result page
 app.get("/result/:type", (req, res) =>
   res.render("result", {
     type: req.params.type,
   })
 );
 
+// Handle webhooks for notifications
 app.post("/api/webhooks/notifications", async (req, res) => {
   const hmacKey = process.env.ADYEN_HMAC_KEY;
   const validator = new hmacValidator();
@@ -123,19 +150,21 @@ app.post("/api/webhooks/notifications", async (req, res) => {
 
     consumeEvent(notification);
     res.status(202).send(); // Acknowledge the event
-
   } else {
     console.log("Invalid HMAC signature: " + notification);
     res.status(401).send("Invalid HMAC signature");
   }
 });
 
+// Function to process notification events
 function consumeEvent(notification) {
   // Add item to DB, queue, or different thread
 }
 
+// Helper function to get the port
 function getPort() {
   return process.env.PORT || 8080;
 }
 
+// Start the server
 app.listen(getPort(), () => console.log(`Server started -> http://localhost:${getPort()}`));

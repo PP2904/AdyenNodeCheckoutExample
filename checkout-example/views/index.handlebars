@@ -15,7 +15,6 @@
       <option value="FR" data-locale="fr_FR" data-currency="EUR">🇫🇷 France</option>
       <option value="DE" data-locale="de_DE" data-currency="EUR">🇩🇪 Germany</option>
       <option value="IT" data-locale="it_IT" data-currency="EUR">🇮🇹 Italy</option>
-      <!-- Add more countries as needed -->
     </select>
   </div>
 
@@ -26,32 +25,27 @@
 
   <ul class="integration-list">
     <li class="integration-list-item">
-      <a href="/checkout?type=dropin" class="integration-list-item-link">
+      <a href="/preview?type=dropin" class="integration-list-item-link">
         <p class="integration-list-item-title">Drop-in</p>
       </a>
     </li>
     <li class="integration-list-item">
-      <a href="/checkout?type=card" class="integration-list-item-link">
+      <a href="/preview?type=card" class="integration-list-item-link">
         <p class="integration-list-item-title">Card</p>
       </a>
     </li>
     <li class="integration-list-item">
-      <a href="/checkout?type=ideal" class="integration-list-item-link">
+      <a href="/preview?type=ideal" class="integration-list-item-link">
         <p class="integration-list-item-title">iDEAL</p>
       </a>
     </li>
-    <!-- Additional buttons for other payment types -->
-
-    <!-- New button for Multiple Components -->
     <li class="integration-list-item">
-      <a href="/checkout?type=multiple" class="integration-list-item-link">
+      <a href="/preview?type=multiple" class="integration-list-item-link">
         <p class="integration-list-item-title">Multiple Components</p>
       </a>
     </li>
-
-    <!-- New button for TWINT -->
     <li class="integration-list-item">
-      <a href="/checkout?type=twint" class="integration-list-item-link">
+      <a href="/preview?type=twint" class="integration-list-item-link">
         <p class="integration-list-item-title">TWINT</p>
       </a>
     </li>
@@ -59,40 +53,31 @@
 </div>
 
 <script>
-// JavaScript to handle state management for country, locale, and currency
-window.onload = function () {
-  // Load saved values from localStorage, or default to the first country in the dropdown
-  const savedCountry = localStorage.getItem("selectedCountry") || "US";
-  const savedLocale = localStorage.getItem("selectedLocale") || "en_US";
-  const savedCurrency = localStorage.getItem("selectedCurrency") || "USD";
+  window.onload = function () {
+    const savedCountry = localStorage.getItem("selectedCountry") || "US";
+    const savedLocale = localStorage.getItem("selectedLocale") || "en_US";
+    const savedCurrency = localStorage.getItem("selectedCurrency") || "USD";
 
-  // Set the dropdown to the saved country
-  document.getElementById("country-dropdown").value = savedCountry;
+    document.getElementById("country-dropdown").value = savedCountry;
+    document.getElementById("selected-country-code").value = savedCountry;
+    document.getElementById("selected-locale").value = savedLocale;
+    document.getElementById("selected-currency").value = savedCurrency;
 
-  // Set hidden inputs with saved values
-  document.getElementById("selected-country-code").value = savedCountry;
-  document.getElementById("selected-locale").value = savedLocale;
-  document.getElementById("selected-currency").value = savedCurrency;
+    setCountry(document.getElementById("country-dropdown"));
+  };
 
-  // Update the storage and hidden fields on dropdown change
-  setCountry(document.getElementById("country-dropdown"));
-};
+  function setCountry(selectElement) {
+    const selectedOption = selectElement.options[selectElement.selectedIndex];
+    const countryCode = selectedOption.value;
+    const locale = selectedOption.getAttribute("data-locale");
+    const currency = selectedOption.getAttribute("data-currency");
 
-// Function to set country, locale, and currency when a country is selected
-function setCountry(selectElement) {
-  const selectedOption = selectElement.options[selectElement.selectedIndex];
-  const countryCode = selectedOption.value;
-  const locale = selectedOption.getAttribute("data-locale");
-  const currency = selectedOption.getAttribute("data-currency");
+    document.getElementById("selected-country-code").value = countryCode;
+    document.getElementById("selected-locale").value = locale;
+    document.getElementById("selected-currency").value = currency;
 
-  // Update hidden input values
-  document.getElementById("selected-country-code").value = countryCode;
-  document.getElementById("selected-locale").value = locale;
-  document.getElementById("selected-currency").value = currency;
-
-  // Store the selected country, locale, and currency in localStorage
-  localStorage.setItem("selectedCountry", countryCode);
-  localStorage.setItem("selectedLocale", locale);
-  localStorage.setItem("selectedCurrency", currency);
-}
+    localStorage.setItem("selectedCountry", countryCode);
+    localStorage.setItem("selectedLocale", locale);
+    localStorage.setItem("selectedCurrency", currency);
+  }
 </script>
