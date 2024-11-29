@@ -38,22 +38,26 @@ async function finalizeCheckout() {
     alert("Error occurred. Look at console for details");
   }
 }
-
+//Dropin Configuration
 async function createAdyenCheckout(session) {
   const configuration = {
     clientKey,
     locale: selectedLocale, // Set locale based on selection
     environment: "test",
+    //https://docs.adyen.com/online-payments/build-your-integration/sessions-flow/?platform=Web&integration=Drop-in&version=6.5.0#:~:text=en%2DUS.-,showPayButton,-Shows%20or%20hides
     showPayButton: true,
     session: session,
+    showBrandIcon:false,
     paymentMethodsConfiguration: {
       ideal: { 
         showImage: true,
         amount: { currency: selectedCurrency, value: 10000 },
       },
+      //Propeties from here: https://docs.adyen.com/payment-methods/cards/web-drop-in/?tab=sessions-requirements_1#:~:text=AdyenCheckout(configuration)%3B-,Properties,-Field
       card: {
-        hasHolderName: true,
-        holderNameRequired: true,
+        //showBrandIcon:false,
+        showStoredPaymentMethods: false, // Optionally hide stored payment methods
+        hasHolderName: false,
         name: "Credit or debit card",
         amount: { currency: selectedCurrency, value: 10000 },
         /*  //click to pay config
@@ -71,6 +75,7 @@ async function createAdyenCheckout(session) {
         amount: { currency: selectedCurrency, value: 10000 },
       }
     },
+    //Event Handlers: https://docs.adyen.com/online-payments/build-your-integration/sessions-flow/?platform=Web&integration=Drop-in&version=6.5.0#:~:text=Add%20event%20handlers%2C%20to%20handle%20events%20that%20get%20triggered%20during%20the%20payment.
     onPaymentCompleted: (result, component) => {
       handleServerResponse(result, component);
     },

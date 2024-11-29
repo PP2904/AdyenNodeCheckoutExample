@@ -41,18 +41,22 @@ app.set("view engine", "handlebars");
 
 /* ################# API ENDPOINTS ###################### */
 
+//SESSIONS Call
 app.post("/api/sessions", async (req, res) => {
   try {
     const orderRef = uuid();
     const localhost = req.get("host");
     const protocol = req.socket.encrypted ? "https" : "http";
-
     const response = await checkout.PaymentsApi.sessions({
       amount: { currency: "EUR", value: 10000 }, // 100€ in minor units
       countryCode: "NL",
       merchantAccount: process.env.ADYEN_MERCHANT_ACCOUNT, // required
       reference: orderRef,
       returnUrl: `${protocol}://${localhost}/checkout?orderRef=${orderRef}`,
+      //Tokenization
+      storePaymentMethodMode: "askForConsent",
+      recurringProcessingModel:"CardOnFile",
+      shopperReference:"TokenTest_shopper1",
       lineItems: [
         { quantity: 1, amountIncludingTax: 5000, description: "Sunglasses" },
         { quantity: 1, amountIncludingTax: 5000, description: "Headphones" },
@@ -79,7 +83,6 @@ app.get("/preview", (req, res) => {
   const paymentConfigs = {
     card: { countryCode: "US", currency: "USD" },
     paypal: { countryCode: "US", currency: "USD" },
-    ideal: { countryCode: "NL", currency: "EUR" },
     twint: { countryCode: "CH", currency: "CHF" }, // Specific config for TWINT
   };
 
@@ -102,14 +105,13 @@ app.get("/checkout", (req, res) => {
   const paymentConfigs = {
     card: { countryCode: "US", currency: "USD" },
     paypal: { countryCode: "US", currency: "USD" },
-    ideal: { countryCode: "NL", currency: "EUR" },
     twint: { countryCode: "CH", currency: "CHF" }, // Specific config for TWINT
   };
 
   const selectedConfig = paymentConfigs[type] || { countryCode: "NL", currency: "EUR" };
 
   if (type === "multiple") {
-    const typeList = ["card", "paypal", "ideal", "twint"];
+    const typeList = ["card", "paypal", "twint"];
     res.render("checkout", {
       clientKey: process.env.ADYEN_CLIENT_KEY,
       typeList,
