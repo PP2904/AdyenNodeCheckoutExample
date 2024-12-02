@@ -32,31 +32,45 @@ app.engine(
     defaultLayout: "main",
     layoutsDir: __dirname + "/views/layouts",
     helpers: {
-      json: (context) => JSON.stringify(context), // Helper to render JSON strings
-      ifeq: (a, b, options) => (a === b ? options.fn(this) : options.inverse(this)), // ifeq helper to check for equality
+      json: (context) => JSON.stringify(context),
+      ifeq: (a, b, options) => (a === b ? options.fn(this) : options.inverse(this)),
     },
   })
 );
 app.set("view engine", "handlebars");
 
+// Centralized helper function to get country and currency
+function getCountryAndCurrency(type) {
+  const paymentConfigs = {
+    card: { countryCode: "US", currency: "USD" },
+    paypal: { countryCode: "US", currency: "USD" },
+    twint: { countryCode: "CH", currency: "CHF" }, // Specific config for TWINT
+  };
+
+  return paymentConfigs[type] || { countryCode: "NL", currency: "EUR" }; // Default to Netherlands and EUR
+}
+
 /* ################# API ENDPOINTS ###################### */
 
-//SESSIONS Call
+// SESSIONS Call
 app.post("/api/sessions", async (req, res) => {
   try {
+    const { type = "default" } = req.body; // Get type from the request body
+    const { countryCode, currency } = getCountryAndCurrency(type);
+
     const orderRef = uuid();
     const localhost = req.get("host");
     const protocol = req.socket.encrypted ? "https" : "http";
+
     const response = await checkout.PaymentsApi.sessions({
-      amount: { currency: "EUR", value: 10000 }, // 100€ in minor units
-      countryCode: "NL",
-      merchantAccount: process.env.ADYEN_MERCHANT_ACCOUNT, // required
+      amount: { currency, value: 10000 }, // Dynamically set currency
+      countryCode, // Dynamically set country code
+      merchantAccount: process.env.ADYEN_MERCHANT_ACCOUNT,
       reference: orderRef,
       returnUrl: `${protocol}://${localhost}/checkout?orderRef=${orderRef}`,
-      //Tokenization
       storePaymentMethodMode: "askForConsent",
-      recurringProcessingModel:"CardOnFile",
-      shopperReference:"TokenTest_shopper1",
+      recurringProcessingModel: "CardOnFile",
+      shopperReference: "TokenTest_shopper1",
       lineItems: [
         { quantity: 1, amountIncludingTax: 5000, description: "Sunglasses" },
         { quantity: 1, amountIncludingTax: 5000, description: "Headphones" },
@@ -70,64 +84,37 @@ app.post("/api/sessions", async (req, res) => {
   }
 });
 
-/* ################# CLIENT SIDE ENDPOINTS ###################### */
-
 // Serve the index page
 app.get("/", (req, res) => res.render("index"));
 
 // Serve the preview page
 app.get("/preview", (req, res) => {
-  const type = req.query.type;
+  const { type = "default" } = req.query;
+  const { countryCode, currency } = getCountryAndCurrency(type);
 
-  // Define payment-specific configurations
-  const paymentConfigs = {
-    card: { countryCode: "US", currency: "USD" },
-    paypal: { countryCode: "US", currency: "USD" },
-    twint: { countryCode: "CH", currency: "CHF" }, // Specific config for TWINT
-  };
-
-  const selectedConfig = paymentConfigs[type] || { countryCode: "NL", currency: "EUR" };
-
-  // Render the preview page with dynamic data
   res.render("preview", {
     clientKey: process.env.ADYEN_CLIENT_KEY,
-    type: type || "default", // Ensure a type is passed
-    countryCode: selectedConfig.countryCode,
-    currency: selectedConfig.currency,
+    type,
+    countryCode,
+    currency,
   });
 });
 
 // Serve the checkout page
 app.get("/checkout", (req, res) => {
-  const type = req.query.type;
+  const { type = "default" } = req.query;
+  const { countryCode, currency } = getCountryAndCurrency(type);
 
-  // Define payment-specific configurations
-  const paymentConfigs = {
-    card: { countryCode: "US", currency: "USD" },
-    paypal: { countryCode: "US", currency: "USD" },
-    twint: { countryCode: "CH", currency: "CHF" }, // Specific config for TWINT
-  };
+  const isMultiple = type === "multiple";
+  const typeList = isMultiple ? ["card", "paypal", "twint"] : [type];
 
-  const selectedConfig = paymentConfigs[type] || { countryCode: "NL", currency: "EUR" };
-
-  if (type === "multiple") {
-    const typeList = ["card", "paypal", "twint"];
-    res.render("checkout", {
-      clientKey: process.env.ADYEN_CLIENT_KEY,
-      typeList,
-      isMultiple: true,
-      countryCode: selectedConfig.countryCode,
-      currency: selectedConfig.currency,
-    });
-  } else {
-    res.render("checkout", {
-      clientKey: process.env.ADYEN_CLIENT_KEY,
-      typeList: [type],
-      isMultiple: false,
-      countryCode: selectedConfig.countryCode,
-      currency: selectedConfig.currency,
-    });
-  }
+  res.render("checkout", {
+    clientKey: process.env.ADYEN_CLIENT_KEY,
+    typeList,
+    isMultiple,
+    countryCode,
+    currency,
+  });
 });
 
 // Serve the result page
