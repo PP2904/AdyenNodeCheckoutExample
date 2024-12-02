@@ -1,60 +1,3 @@
- <!-- Country dropdown with flags and associated currencies -->
-  <div class="country-select">
-    <label for="country-dropdown">Choose your country:</label>
-    <select id="country-dropdown" onchange="setCountry(this)">
-      <option value="US" data-locale="en_US" data-currency="USD">🇺🇸 United States</option>
-      <option value="NL" data-locale="nl_NL" data-currency="EUR">🇳🇱 Netherlands</option>
-      <option value="CH" data-locale="de_CH" data-currency="CHF">🇨🇭 Switzerland</option>
-      <option value="FR" data-locale="fr_FR" data-currency="EUR">🇫🇷 France</option>
-      <option value="DE" data-locale="de_DE" data-currency="EUR">🇩🇪 Germany</option>
-      <option value="IT" data-locale="it_IT" data-currency="EUR">🇮🇹 Italy</option>
-    </select>
-  </div>
-
-<!-- Container for the Drop-in -->
-<div id="dropin-container"></div>
-
-<script>
-  document.getElementById("country-select").addEventListener("change", function () {
-    const selectedCountry = this.value;
-    const selectedCurrency = this.options[this.selectedIndex].getAttribute("data-currency");
-
-    // Fetch session with selected country and currency
-    fetch("/api/sessions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        country: selectedCountry,
-        currency: selectedCurrency,
-      }),
-    })
-      .then((response) => response.json())
-      .then((session) => {
-        // Initialize Adyen Drop-in
-        const configuration = {
-          clientKey: "YOUR_ADYEN_CLIENT_KEY", // Replace with your actual Adyen client key
-          locale: "en_US",
-          environment: "test",
-          session: session,
-          showStoredPaymentMethods: false,
-          onPaymentCompleted: (result, component) => {
-            console.log("Payment completed:", result);
-          },
-          onError: (error, component) => {
-            console.error("Error:", error);
-          },
-        };
-
-        const checkout = new AdyenCheckout(configuration);
-        checkout.create("dropin").mount("#dropin-container");
-      })
-      .catch((error) => console.error("Error fetching session:", error));
-  });
-</script>
-
-
 <div class="main-container">
   <div class="info">
     <h1>Select a demo</h1>
@@ -65,7 +8,7 @@
   <!-- Country dropdown with flags and associated currencies -->
   <div class="country-select">
     <label for="country-dropdown">Choose your country:</label>
-    <select id="country-dropdown" onchange="setCountry(this)">
+    <select id="country-dropdown">
       <option value="US" data-locale="en_US" data-currency="USD">🇺🇸 United States</option>
       <option value="NL" data-locale="nl_NL" data-currency="EUR">🇳🇱 Netherlands</option>
       <option value="CH" data-locale="de_CH" data-currency="CHF">🇨🇭 Switzerland</option>
@@ -110,31 +53,50 @@
 </div>
 
 <script>
+  // Initialize dropdown on page load
   window.onload = function () {
     const savedCountry = localStorage.getItem("selectedCountry") || "US";
     const savedLocale = localStorage.getItem("selectedLocale") || "en_US";
     const savedCurrency = localStorage.getItem("selectedCurrency") || "USD";
 
+    // Set dropdown and hidden inputs
     document.getElementById("country-dropdown").value = savedCountry;
     document.getElementById("selected-country-code").value = savedCountry;
     document.getElementById("selected-locale").value = savedLocale;
     document.getElementById("selected-currency").value = savedCurrency;
 
+    console.log("Loaded Country:", savedCountry);
+    console.log("Loaded Currency:", savedCurrency);
+    console.log("Loaded Locale:", savedLocale);
+
     setCountry(document.getElementById("country-dropdown"));
   };
 
+  // Handle country selection and update values
+  document.getElementById("country-dropdown").addEventListener("change", function () {
+    setCountry(this);
+  });
+
+  // Function to update country, locale, and currency
   function setCountry(selectElement) {
     const selectedOption = selectElement.options[selectElement.selectedIndex];
     const countryCode = selectedOption.value;
     const locale = selectedOption.getAttribute("data-locale");
     const currency = selectedOption.getAttribute("data-currency");
 
+    // Update hidden inputs
     document.getElementById("selected-country-code").value = countryCode;
     document.getElementById("selected-locale").value = locale;
     document.getElementById("selected-currency").value = currency;
 
+    // Update localStorage
     localStorage.setItem("selectedCountry", countryCode);
     localStorage.setItem("selectedLocale", locale);
     localStorage.setItem("selectedCurrency", currency);
+
+    // Log for debugging
+    console.log("Country selected:", countryCode);
+    console.log("Locale selected:", locale);
+    console.log("Currency selected:", currency);
   }
 </script>

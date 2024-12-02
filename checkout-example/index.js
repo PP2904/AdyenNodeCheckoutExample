@@ -40,14 +40,20 @@ app.engine(
 app.set("view engine", "handlebars");
 
 // Centralized helper function to get country and currency
-function getCountryAndCurrency(type) {
+function getCountryAndCurrency(type, providedCountry, providedCurrency) {
+  // Default configurations based on payment method type
   const paymentConfigs = {
     card: { countryCode: "US", currency: "USD" },
     paypal: { countryCode: "US", currency: "USD" },
     twint: { countryCode: "CH", currency: "CHF" }, // Specific config for TWINT
   };
 
-  return paymentConfigs[type] || { countryCode: "NL", currency: "EUR" }; // Default to Netherlands and EUR
+  // Use provided values if they exist, else fallback to defaults
+  const defaultConfig = paymentConfigs[type] || { countryCode: "NL", currency: "EUR" };
+  return {
+    countryCode: providedCountry || defaultConfig.countryCode,
+    currency: providedCurrency || defaultConfig.currency,
+  };
 }
 
 /* ################# API ENDPOINTS ###################### */
@@ -55,15 +61,18 @@ function getCountryAndCurrency(type) {
 // SESSIONS Call
 app.post("/api/sessions", async (req, res) => {
   try {
-    const { type = "default" } = req.body; // Get type from the request body
-    const { countryCode, currency } = getCountryAndCurrency(type);
+    const { type = "default", country, currency } = req.body; // Get type, country, and currency from the request body
+    const { countryCode, currency: resolvedCurrency } = getCountryAndCurrency(type, country, currency);
+
+    console.log("Received Country:", countryCode);
+    console.log("Received Currency:", resolvedCurrency);
 
     const orderRef = uuid();
     const localhost = req.get("host");
     const protocol = req.socket.encrypted ? "https" : "http";
 
     const response = await checkout.PaymentsApi.sessions({
-      amount: { currency, value: 10000 }, // Dynamically set currency
+      amount: { currency: resolvedCurrency, value: 10000 }, // Dynamically set currency
       countryCode, // Dynamically set country code
       merchantAccount: process.env.ADYEN_MERCHANT_ACCOUNT,
       reference: orderRef,
@@ -80,7 +89,7 @@ app.post("/api/sessions", async (req, res) => {
     res.json(response);
   } catch (err) {
     console.error(`Error: ${err.message}, error code: ${err.errorCode}`);
-    res.status(err.statusCode).json(err.message);
+    res.status(err.statusCode || 500).json(err.message);
   }
 });
 
@@ -89,31 +98,37 @@ app.get("/", (req, res) => res.render("index"));
 
 // Serve the preview page
 app.get("/preview", (req, res) => {
-  const { type = "default" } = req.query;
-  const { countryCode, currency } = getCountryAndCurrency(type);
+  const { type = "default", country, currency } = req.query;
+  const { countryCode, currency: resolvedCurrency } = getCountryAndCurrency(type, country, currency);
+
+  console.log("Preview - Country:", countryCode);
+  console.log("Preview - Currency:", resolvedCurrency);
 
   res.render("preview", {
     clientKey: process.env.ADYEN_CLIENT_KEY,
     type,
     countryCode,
-    currency,
+    currency: resolvedCurrency,
   });
 });
 
 // Serve the checkout page
 app.get("/checkout", (req, res) => {
-  const { type = "default" } = req.query;
-  const { countryCode, currency } = getCountryAndCurrency(type);
+  const { type = "default", country, currency } = req.query;
+  const { countryCode, currency: resolvedCurrency } = getCountryAndCurrency(type, country, currency);
 
   const isMultiple = type === "multiple";
   const typeList = isMultiple ? ["card", "paypal", "twint"] : [type];
+
+  console.log("Checkout - Country:", countryCode);
+  console.log("Checkout - Currency:", resolvedCurrency);
 
   res.render("checkout", {
     clientKey: process.env.ADYEN_CLIENT_KEY,
     typeList,
     isMultiple,
     countryCode,
-    currency,
+    currency: resolvedCurrency,
   });
 });
 

@@ -1,29 +1,46 @@
 const clientKey = document.getElementById("clientKey").textContent;
 const typeList = JSON.parse(document.getElementById("typeList").textContent);
 
-// Retrieve the selected locale and currency from localStorage
+// Retrieve the selected locale, country, and currency from localStorage
 const selectedLocale = localStorage.getItem("selectedLocale") || "en_US";
 const selectedCurrency = localStorage.getItem("selectedCurrency") || "USD";
+const selectedCountry = localStorage.getItem("selectedCountry") || "US";
+
+// Log selected values for debugging
+console.log("Selected Locale:", selectedLocale);
+console.log("Selected Currency:", selectedCurrency);
+console.log("Selected Country:", selectedCountry);
 
 // Used to finalize a checkout call in case of redirect
 const urlParams = new URLSearchParams(window.location.search);
 const sessionId = urlParams.get('sessionId');
 const redirectResult = urlParams.get('redirectResult');
 
+// Start the checkout process
 async function startCheckout() {
   try {
-    const checkoutSessionResponse = await callServer("/api/sessions");
+    console.log("Starting checkout process...");
+
+    // Pass selected country and currency to the backend
+    const sessionData = {
+      country: selectedCountry,
+      currency: selectedCurrency,
+    };
+
+    const checkoutSessionResponse = await callServer("/api/sessions", sessionData);
+
+    console.log("Session Response from Server:", checkoutSessionResponse);
 
     const checkout = await createAdyenCheckout(checkoutSessionResponse);
 
     // Dynamically create and mount components for each type in typeList
-    typeList.forEach(type => {
+    typeList.forEach((type) => {
+      console.log(`Mounting payment method: ${type}`);
       const elementId = `#${type}`;
       checkout.create(type).mount(elementId);
     });
-
   } catch (error) {
-    console.error(error);
+    console.error("Error during checkout initialization:", error);
     alert("Error occurred. Look at console for details");
   }
 }
@@ -31,41 +48,43 @@ async function startCheckout() {
 // Finalize checkout for redirects
 async function finalizeCheckout() {
   try {
+    console.log("Finalizing checkout for redirect...");
     const checkout = await createAdyenCheckout({ id: sessionId });
     checkout.submitDetails({ details: { redirectResult } });
   } catch (error) {
-    console.error(error);
+    console.error("Error during redirect handling:", error);
     alert("Error occurred. Look at console for details");
   }
 }
-//Dropin Configuration
+
+// Drop-in Configuration
 async function createAdyenCheckout(session) {
+  console.log("Initializing Adyen Checkout with session:", session);
+
   const configuration = {
     clientKey,
     locale: selectedLocale, // Set locale based on selection
     environment: "test",
-    //https://docs.adyen.com/online-payments/build-your-integration/sessions-flow/?platform=Web&integration=Drop-in&version=6.5.0#:~:text=en%2DUS.-,showPayButton,-Shows%20or%20hides
-    showPayButton: true,
+    showStoredPaymentMethods: false, // Optionally hide stored payment methods
+    showPayButton: true, // Show the Pay button
     session: session,
-    showBrandIcon:false,
+    showBrandIcon: false,
     paymentMethodsConfiguration: {
-      ideal: { 
+      riverty: {
+        visibility: {
+          personalDetails: "hidden", // These fields will not appear on the payment form.
+          billingAddress: "readOnly", // These fields will appear on the payment form, but the shopper cannot edit them.
+          deliveryAddress: "editable", // These fields will appear on the payment form, and the shopper can edit them.
+        },
+      },
+      ideal: {
         showImage: true,
         amount: { currency: selectedCurrency, value: 10000 },
       },
-      //Propeties from here: https://docs.adyen.com/payment-methods/cards/web-drop-in/?tab=sessions-requirements_1#:~:text=AdyenCheckout(configuration)%3B-,Properties,-Field
       card: {
-        //showBrandIcon:false,
-        showStoredPaymentMethods: false, // Optionally hide stored payment methods
         hasHolderName: false,
         name: "Credit or debit card",
         amount: { currency: selectedCurrency, value: 10000 },
-        /*  //click to pay config
-          clickToPayConfiguration: {
-            //Card PAN enrolled for CTP for MC: 5186001700008785
-            merchantDisplayName: 'PeterPEcom',
-            shopperEmail: 'pfrommer.peter@gmail.com' // Used to recognize your shopper's Click to Pay account.
-          },  */
       },
       paypal: {
         amount: { currency: selectedCurrency, value: 10000 },
@@ -73,15 +92,15 @@ async function createAdyenCheckout(session) {
       },
       twint: {
         amount: { currency: selectedCurrency, value: 10000 },
-      }
+      },
     },
-    //Event Handlers: https://docs.adyen.com/online-payments/build-your-integration/sessions-flow/?platform=Web&integration=Drop-in&version=6.5.0#:~:text=Add%20event%20handlers%2C%20to%20handle%20events%20that%20get%20triggered%20during%20the%20payment.
     onPaymentCompleted: (result, component) => {
+      console.log("Payment completed:", result);
       handleServerResponse(result, component);
     },
     onError: (error, component) => {
-      console.error(error.name, error.message, error.stack, component);
-    }
+      console.error("Checkout error:", error);
+    },
   };
 
   return new AdyenCheckout(configuration);
@@ -89,12 +108,15 @@ async function createAdyenCheckout(session) {
 
 // Function to make calls to the server
 async function callServer(url, data) {
+  console.log("Calling server with:", data);
   const res = await fetch(url, {
     method: "POST",
-    body: data ? JSON.stringify(data) : "",
-    headers: { "Content-Type": "application/json" }
+    body: JSON.stringify(data),
+    headers: { "Content-Type": "application/json" },
   });
-  return await res.json();
+  const response = await res.json();
+  console.log("Server Response:", response);
+  return response;
 }
 
 // Handle server responses
@@ -122,7 +144,9 @@ function handleServerResponse(res, component) {
 
 // Start checkout process
 if (!sessionId) {
+  console.log("No sessionId detected, starting checkout...");
   startCheckout();
 } else {
+  console.log("sessionId detected, finalizing checkout...");
   finalizeCheckout();
 }
