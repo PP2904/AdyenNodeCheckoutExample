@@ -79,13 +79,15 @@ app.post("/api/sessions", async (req, res) => {
       returnUrl: `${protocol}://${localhost}/checkout?orderRef=${orderRef}`,
       storePaymentMethodMode: "askForConsent",
       recurringProcessingModel: "CardOnFile",
-      shopperReference: "TokenTest_shopper1",
+      shopperReference: "shopper_"+orderRef,
       lineItems: [
         { quantity: 1, amountIncludingTax: 5000, description: "Sunglasses" },
         { quantity: 1, amountIncludingTax: 5000, description: "Headphones" },
       ],
     });
 
+    //log session response
+    console.log("Session Response:", response);
     res.json(response);
   } catch (err) {
     console.error(`Error: ${err.message}, error code: ${err.errorCode}`);
@@ -118,7 +120,7 @@ app.get("/checkout", (req, res) => {
   const { countryCode, currency: resolvedCurrency } = getCountryAndCurrency(type, country, currency);
 
   const isMultiple = type === "multiple";
-  const typeList = isMultiple ? ["card", "paypal", "twint"] : [type];
+  const typeList = isMultiple ? ["card", "paypal", "twint", "riverty"] : [type];
 
   console.log("Checkout - Country:", countryCode);
   console.log("Checkout - Currency:", resolvedCurrency);
