@@ -37,7 +37,9 @@ async function startCheckout() {
     typeList.forEach((type) => {
       console.log(`Mounting payment method: ${type}`);
       const elementId = `#${type}`;
-      checkout.create(type).mount(elementId);
+      checkout.create(type, {
+       //showStoredPaymentMethods: false
+      }).mount(elementId);
     });
   } catch (error) {
     console.error("Error during checkout initialization:", error);
@@ -57,7 +59,7 @@ async function finalizeCheckout() {
   }
 }
 
-// Drop-in Configuration
+// global Drop-in Configuration + passing session
 async function createAdyenCheckout(session) {
   console.log("Initializing Adyen Checkout with session:", session);
 
@@ -65,7 +67,7 @@ async function createAdyenCheckout(session) {
     clientKey,
     locale: selectedLocale, // Set locale based on selection
     environment: "test",
-    showStoredPaymentMethods: false, // Optionally hide stored payment methods
+    //showStoredPaymentMethods: false, // Optionally hide stored payment methods
     showPayButton: true, // Show the Pay button
     session: session,
     showBrandIcon: false,
