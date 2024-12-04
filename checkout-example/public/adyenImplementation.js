@@ -67,7 +67,7 @@ async function createAdyenCheckout(session) {
     clientKey,
     locale: selectedLocale, // Set locale based on selection
     environment: "test",
-    //showStoredPaymentMethods: false, // Optionally hide stored payment methods
+    //showStoredPaymentMethods: false, // not here!!
     showPayButton: true, // Show the Pay button
     session: session,
     showBrandIcon: false,

@@ -40,11 +40,11 @@ async function initCheckout() {
             console.log("changed")
           },
           //click to pay config
-          clickToPayConfiguration: {
+         /*  clickToPayConfiguration: {
             //Card PAN enrolled for CTP for MC: 5186001700008785
             merchantDisplayName: 'YOUR_MERCHANT_NAME',
             shopperEmail: 'pfrommer.peter@gmail.com' // Used to recognize your shopper's Click to Pay account.
-          }
+          } */
         },
         paypal: {
           environment: "test", // Change this to "live" when you are ready to accept live PayPal payments.
@@ -56,9 +56,14 @@ async function initCheckout() {
         }
       },
       onSubmit: (state, component) => {
+        console.log("onSubmit baby!");
         if (state.isValid) {
-          handleSubmission(state, component, "/api/initiatePayment");
-        }
+          // Add a 3-second timer before calling handleSubmission
+          setTimeout(() => {
+            console.log("Proceeding with payment after 3 seconds...");
+            handleSubmission(state, component, "/api/initiatePayment");
+          }, 3000); // 3-second delay
+        } 
       },
       onAdditionalDetails: (state, component) => {
         handleSubmission(state, component, "/api/submitAdditionalDetails");

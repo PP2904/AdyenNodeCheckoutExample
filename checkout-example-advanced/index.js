@@ -50,6 +50,10 @@ app.post("/api/getPaymentMethods", async (req, res) => {
     const response = await checkout.PaymentsApi.paymentMethods({
       channel: "Web",
       merchantAccount: process.env.ADYEN_MERCHANT_ACCOUNT,
+      //important for /paymentMethods to show the storedPaymentMethods
+      shopperReference: "1234",
+      //separate debit and credit card fields
+      //splitCardFundingSources:true
     });
     res.json(response);
   } catch (err) {
@@ -71,15 +75,25 @@ app.post("/api/initiatePayment", async (req, res) => {
     const localhost = req.get('host');
     // const isHttps = req.connection.encrypted;
     const protocol = req.socket.encrypted? 'https' : 'http';    
+
+    //define /payments call
     // ideally the data passed here should be computed based on business logic
     const response = await checkout.PaymentsApi.payments({
-      amount: { currency, value: 1000 }, // value is 10€ in minor units
+      amount: { currency, value: 100 }, // value is 10€ in minor units
       reference: orderRef, // required
       merchantAccount: process.env.ADYEN_MERCHANT_ACCOUNT, // required
       channel: "Web", // required
       origin: `${protocol}://${localhost}`, // required for 3ds2 native flow
       browserInfo: req.body.browserInfo, // required for 3ds2
       shopperIP, // required by some issuers for 3ds2
+
+      //Tokenization params
+      storePaymentMethod: true,
+      recurringProcessingModel: "CardOnFile",
+      shopperInteraction:"Ecommerce",
+      shopperReference: "1234",
+
+      //3DS
       authenticationData: {
         attemptAuthentication: "always",
         // add the following line for Native 3DS2 > see also 3ds2-example folder
@@ -110,7 +124,6 @@ app.post("/api/initiatePayment", async (req, res) => {
       //blik
       countryCode: req.body.paymentMethod.type.includes("blik") ? "PL" : null,
       blikCode: "777987",
-      shopperReference: "12345",
       //shopperEmail: "youremail@email.com",
       shopperEmail: "peter.pfrommer@adyen.com",
       shopperLocale: "en_US",

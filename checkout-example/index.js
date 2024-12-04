@@ -79,8 +79,7 @@ app.post("/api/sessions", async (req, res) => {
       returnUrl: `${protocol}://${localhost}/checkout?orderRef=${orderRef}`,
       storePaymentMethodMode: "askForConsent",
       recurringProcessingModel: "CardOnFile",
-      shopperReference: "1234",
-      //"shopper_"+orderRef,
+      shopperReference: "1234", //"shopper_"+orderRef,
       lineItems: [
         { quantity: 1, amountIncludingTax: 5000, description: "Sunglasses" },
         { quantity: 1, amountIncludingTax: 5000, description: "Headphones" },
