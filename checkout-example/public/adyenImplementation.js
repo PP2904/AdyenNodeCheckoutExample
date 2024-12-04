@@ -103,14 +103,19 @@ async function createAdyenCheckout(session) {
     onError: (error, component) => {
       console.error("Checkout error:", error);
     },
-    /* onSubmit: (state, component, actions) => {
-      console.log ("onSubmit called")
-      console.log("state:", state)
-      //actions undefined
-      //console.log("actions", actions)
-      console.log("component", component)
-      
-    } */
+    /* onSubmit: (state, component) => {
+      console.log("onSubmit called");
+      console.log("State:", state);
+      console.log("Component:", component);
+    
+      // Simulate a delay of 3 seconds before continuing with the payment flow
+      setTimeout(() => {
+        console.log("Proceeding with payment after 3 seconds...");
+        // Continue the payment flow
+        actions.resolve();
+      }, 3000); // Delay of 3 seconds
+    }, */
+    
     onChange:(state, component) => {
       console.log("this is the state: ", state)
     }
