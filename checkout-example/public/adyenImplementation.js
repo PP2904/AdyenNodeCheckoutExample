@@ -103,6 +103,17 @@ async function createAdyenCheckout(session) {
     onError: (error, component) => {
       console.error("Checkout error:", error);
     },
+    /* onSubmit: (state, component, actions) => {
+      console.log ("onSubmit called")
+      console.log("state:", state)
+      //actions undefined
+      //console.log("actions", actions)
+      console.log("component", component)
+      
+    } */
+    onChange:(state, component) => {
+      console.log("this is the state: ", state)
+    }
   };
 
   return new AdyenCheckout(configuration);
