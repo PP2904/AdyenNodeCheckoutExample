@@ -67,6 +67,8 @@ async function initCheckout() {
         //console.log("this is the state: ", state)
         //console.log("this is the component: ", component)
         // Store the state.data in local storage
+        //const cardBrand = state.data.paymentMethod.brand
+        //const cardSummary = ...
         localStorage.setItem("paymentStateData", JSON.stringify(state.data));
         console.log("State data saved to local storage:", state.data);
 
