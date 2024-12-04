@@ -63,6 +63,14 @@ async function initCheckout() {
       onAdditionalDetails: (state, component) => {
         handleSubmission(state, component, "/api/submitAdditionalDetails");
       },
+      onChange: (state, component) => {
+        //console.log("this is the state: ", state)
+        //console.log("this is the component: ", component)
+        // Store the state.data in local storage
+        localStorage.setItem("paymentStateData", JSON.stringify(state.data));
+        console.log("State data saved to local storage:", state.data);
+
+      }
     };
 
     const checkout = await new AdyenCheckout(configuration);
