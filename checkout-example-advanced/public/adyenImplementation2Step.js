@@ -64,7 +64,7 @@ async function initCheckout() {
         handleSubmission(state, component, "/api/submitAdditionalDetails");
       },
       onChange: (state, component) => {
-        //console.log("this is the state: ", state)
+        //console.log("this is the state data: ", state.data)
         //console.log("this is the component: ", component)
         // Store the state.data in local storage
         //const cardBrand = state.data.paymentMethod.brand
@@ -76,6 +76,8 @@ async function initCheckout() {
     };
 
     const checkout = await new AdyenCheckout(configuration);
+    //console.log("here the type: ", type)
+    //console.log("this is dropin active payment methods data: ", type.activePaymentMethod.data)
     checkout.create(type).mount(document.getElementById(type));
   } catch (error) {
     console.error(error);

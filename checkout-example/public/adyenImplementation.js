@@ -37,10 +37,18 @@ async function startCheckout() {
     typeList.forEach((type) => {
       console.log(`Mounting payment method: ${type}`);
       const elementId = `#${type}`;
+      //one function for create checkout and mount
       checkout.create(type, {
        //showStoredPaymentMethods: false
       }).mount(elementId);
     });
+    //Alternative split create and mount in two functions
+    /* const checkoutComp = checkout.create(type, {
+      //showStoredPaymentMethods: false
+     })
+     console.log("after checkout create") 
+    checkoutComp.mount(elementId);
+    console.log("after mount") */
   } catch (error) {
     console.error("Error during checkout initialization:", error);
     alert("Error occurred. Look at console for details");

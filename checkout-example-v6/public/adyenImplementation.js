@@ -22,6 +22,7 @@ async function startCheckout() {
       //console.log(checkout)
     // Create an instance of Drop-in and mount it
     //changed from: checkout.create(type).mount(document.getElementById(type));
+    //console.log("this is dropin active payment methods data: ", type.activePaymentMethod.data)
     checkout.mount(document.getElementById(type));
     
 
