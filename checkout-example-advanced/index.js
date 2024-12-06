@@ -109,13 +109,19 @@ app.post("/api/initiatePayment", async (req, res) => {
         ? { type: "boletobancario_santander" } : req.body.paymentMethod,
       // below fields are required for Boleto:
       socialSecurityNumber: req.body.socialSecurityNumber,
-      shopperName: req.body.shopperName,
+      shopperName: {
+        firstName: "Risky",
+        lastName: "SCA-H"
+    },
       // we strongly recommend that you the billingAddress in your request. 
       // card schemes require this for channel web, iOS, and Android implementations.
-      billingAddress:
-        typeof req.body.billingAddress === "undefined" || Object.keys(req.body.billingAddress).length === 0
-          ? null
-          : req.body.billingAddress,
+      billingAddress: {
+        city: "Amsterdam",
+        country: "NL",
+        houseNumberOrName: "6-50",
+        postalCode: "1011 DJ",
+        street: "Simon Carmiggeltstraat"
+    },
       deliveryDate: new Date("2017-07-17T13:42:40.428+01:00"),
       shopperStatement: "Aceitar o pagamento até 15 dias após o vencimento.Não cobrar juros. Não aceitar o pagamento com cheque",
       // below fields are required for Klarna, line items included
@@ -127,10 +133,34 @@ app.post("/api/initiatePayment", async (req, res) => {
       //shopperEmail: "youremail@email.com",
       shopperEmail: "peter.pfrommer@adyen.com",
       shopperLocale: "en_US",
+      //riverty
+      dateOfBirth: "1989-01-25",
+      //ratepay
+      telephoneNumber: "+31858888138",
+      //https://hub.is.adyen.com/our-solution/payments/payments-engine/payment-methods/ratepay#technical_configuration
+      deviceFingerprint: "ratepay68",
       lineItems: [
-        {quantity: 1, amountIncludingTax: 5000 , description: "Sunglasses"},
-        {quantity: 1, amountIncludingTax: 5000 , description: "Headphones"}
-      ],
+        {
+            quantity: 1,
+            amountExcludingTax: 50,
+            taxPercentage: 0,
+            description: "Shoes",
+            id: "Item #1",
+            taxAmount: 0,
+            amountIncludingTax: 50,
+            taxCategory: "High"
+        },
+        {
+            quantity: 2,
+            amountExcludingTax: 50,
+            taxPercentage: 0,
+            description: "Socks",
+            id: "Item #2",
+            taxAmount: 0,
+            amountIncludingTax: 50,
+            taxCategory: "High"
+        }
+    ]
       //additionalData fields for advanced flow
      /*  additionalData:{
         "authorisationType":"PreAuth"

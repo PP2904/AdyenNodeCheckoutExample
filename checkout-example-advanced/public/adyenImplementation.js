@@ -53,9 +53,27 @@ async function initCheckout() {
             currency: "EUR",
             value: 10000
                   },
+        },
+        ratepay: { // Optional configuration for Ratepay Open Invoice
+          visibility: {
+              personalDetails: "hidden", // These fields will not appear on the payment form.
+              billingAddress: "readOnly", // These fields will appear on the payment form,
+                                        //but the shopper cannot edit them.
+              deliveryAddress: "editable" //These fields will appear on the payment form,
+                                        // and the shopper can edit them.
+                                        //This is the default behavior.
+          }
+      },
+      riverty : {},
+      },
+    
+      onSubmit: (state, component) => {
+        if (state.isValid) {
+          handleSubmission(state, component, "/api/initiatePayment");
         }
       },
-      onSubmit: (state, component) => {
+      //onSubmit mit 3 second timer
+      /* onSubmit: (state, component) => {
         console.log("onSubmit baby!");
         if (state.isValid) {
           // Add a 3-second timer before calling handleSubmission
@@ -64,7 +82,8 @@ async function initCheckout() {
             handleSubmission(state, component, "/api/initiatePayment");
           }, 3000); // 3-second delay
         } 
-      },
+      }, */
+      
       onAdditionalDetails: (state, component) => {
         handleSubmission(state, component, "/api/submitAdditionalDetails");
       },
