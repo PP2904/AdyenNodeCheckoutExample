@@ -134,7 +134,7 @@ app.post("/api/initiatePayment", async (req, res) => {
       shopperEmail: "peter.pfrommer@adyen.com",
       shopperLocale: "en_US",
       //riverty
-      dateOfBirth: "1989-01-25",
+      dateOfBirth:new Date("2017-07-17T13:42:40.428+01:00"),
       //ratepay
       telephoneNumber: "+31858888138",
       //https://hub.is.adyen.com/our-solution/payments/payments-engine/payment-methods/ratepay#technical_configuration
