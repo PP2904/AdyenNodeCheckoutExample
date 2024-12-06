@@ -40,8 +40,12 @@ async function startCheckout() {
       //one function for create checkout and mount
       checkout.create(type, {
        //showStoredPaymentMethods: false
-      }).mount(elementId);
+      }).mount(`${elementId}-container`);
     });
+
+   //works for paypal with missing string "container" 
+   //checkout.create(type).mount(document.getElementById(`${type}-container`));
+
     //Alternative split create and mount in two functions
     /* const checkoutComp = checkout.create(type, {
       //showStoredPaymentMethods: false
@@ -125,7 +129,8 @@ async function createAdyenCheckout(session) {
     }, */
     
     onChange:(state, component) => {
-      console.log("this is the state: ", state)
+      //console.log("this is the state: ", state)
+      console.log("triggering onChange")
     }
   };
 
