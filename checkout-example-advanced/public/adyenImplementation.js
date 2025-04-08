@@ -31,14 +31,58 @@ async function initCheckout() {
           //holderNameRequired: true, // Mark the cardholder name field as required.
           //billingAddressRequired: true, // Show the billing address input fields and mark them as required.
 
-          //Card Component Event Handlers
+          //+++++++
+          //++ Card Component Event Handlers++
           //from https://docs.adyen.com/payment-methods/cards/web-component/#optional-configuration:~:text=callback.-,Events,-You%20can%20also
+          //+++++++
+          
+          
           onConfigSuccess: (data) => {
             console.log("loaded")
           },
+          
           onChange: () => {
             console.log("changed")
           },
+
+          onSubmit: (state, component) => {
+            if (state.isValid) {
+              handleSubmission(state, component, "/api/initiatePayment");
+            }
+            console.log("onSubmit")
+          },
+
+          //onSubmit mit 3 second timer
+          /* onSubmit: (state, component) => {
+            console.log("onSubmit baby!");
+            if (state.isValid) {
+              // Add a 3-second timer before calling handleSubmission
+              setTimeout(() => {
+                console.log("Proceeding with payment after 3 seconds...");
+                handleSubmission(state, component, "/api/initiatePayment");
+              }, 3000); // 3-second delay
+            } 
+          }, */
+
+          onAdditionalDetails: (state, component) => {
+            handleSubmission(state, component, "/api/submitAdditionalDetails");
+          },
+
+          onFieldValid: (state, component) => {
+            console.log("thats the state from onFieldValid: ", state)
+            console.log('thats the issuer BIN: ', state.issuerBin)
+            console.log("that's the component ", component)
+          },
+
+          //does not work with Amex?
+          onBinLookup: (state,component) => {
+            console.log("onBinLookUp: ",state)
+          },
+
+          onBinValue: (state,component) => {
+            console.log("onBinValue: ",state)
+          }
+
           //click to pay config
          /*  clickToPayConfiguration: {
             //Card PAN enrolled for CTP for MC: 5186001700008785
@@ -53,6 +97,7 @@ async function initCheckout() {
             currency: "EUR",
             value: 10000
                   },
+         //subtype:"sdk"
         },
         ratepay: { // Optional configuration for Ratepay Open Invoice
           visibility: {
@@ -65,27 +110,6 @@ async function initCheckout() {
           }
       },
       riverty : {},
-      },
-    
-      onSubmit: (state, component) => {
-        if (state.isValid) {
-          handleSubmission(state, component, "/api/initiatePayment");
-        }
-      },
-      //onSubmit mit 3 second timer
-      /* onSubmit: (state, component) => {
-        console.log("onSubmit baby!");
-        if (state.isValid) {
-          // Add a 3-second timer before calling handleSubmission
-          setTimeout(() => {
-            console.log("Proceeding with payment after 3 seconds...");
-            handleSubmission(state, component, "/api/initiatePayment");
-          }, 3000); // 3-second delay
-        } 
-      }, */
-      
-      onAdditionalDetails: (state, component) => {
-        handleSubmission(state, component, "/api/submitAdditionalDetails");
       },
     };
 

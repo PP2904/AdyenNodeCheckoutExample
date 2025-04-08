@@ -108,6 +108,14 @@ async function createAdyenCheckout(session) {
         amount: { currency: selectedCurrency, value: 10000 },
       },
     },
+
+      //+++++++
+          //++ Card Component Event Handlers++
+          //from https://docs.adyen.com/payment-methods/cards/web-component/#optional-configuration:~:text=callback.-,Events,-You%20can%20also
+          //+++++++
+          
+    
+          
     onPaymentCompleted: (result, component) => {
       console.log("Payment completed:", result);
       handleServerResponse(result, component);
@@ -132,6 +140,8 @@ async function createAdyenCheckout(session) {
       //console.log("this is the state: ", state)
       console.log("triggering onChange")
     }
+
+    //onFieldValid does not work with sessions?
   };
 
   return new AdyenCheckout(configuration);
