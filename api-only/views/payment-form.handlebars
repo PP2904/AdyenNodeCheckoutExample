@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment Form</title>
+  <link rel="stylesheet" href="/css/payment-form.css">
+</head>
+<body>
+
+  <h1>Payment Form</h1>
+  <div class="payment-form">
+    <form id="paymentForm">
+      <div class="form-group">
+        <label for="cardNumber">Card Number</label>
+        <input type="text" id="cardNumber" name="cardNumber" placeholder="4111 1111 1111 1111" required />
+      </div>
+      <div class="form-group">
+        <label for="expiryDate">Expiry Date (MM/YY)</label>
+        <input type="text" id="expiryDate" name="expiryDate" placeholder="MM/YY" required />
+      </div>
+      <div class="form-group">
+        <label for="cvc">CVC</label>
+        <input type="text" id="cvc" name="cvc" placeholder="123" required />
+      </div>
+      <button type="submit" class="submit-btn">Pay Now</button>
+    </form>
+  </div>
+
+  <script>
+    document.getElementById('paymentForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+
+      // Get input values from the form
+      const cardNumber = document.getElementById('cardNumber').value;
+      const expiryDate = document.getElementById('expiryDate').value;
+      const cvc = document.getElementById('cvc').value;
+
+      // Prepare data for the Adyen payment request
+      const paymentData = {
+        cardNumber: cardNumber,
+        expiryDate: expiryDate,
+        cvc: cvc
+      };
+
+      // Make an AJAX request to the server (Adyen API call)
+      fetch('/process-payment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(paymentData)
+      })
+      .then(response => response.json())
+      .then(data => {
+        // Handle the response from the server (e.g., success/failure)
+        console.log(data);
+        if (data.status === 'success') {
+          alert('Payment successful!');
+        } else {
+          alert('Payment failed!');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Error processing payment');
+      });
+    });
+  </script>
+
+</body>
+</html>
