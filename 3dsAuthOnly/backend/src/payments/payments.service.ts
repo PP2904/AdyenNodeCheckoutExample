@@ -108,8 +108,10 @@ export class PaymentsService {
         currency: "EUR",
         value: 1000,
       },
+      //adding authenticationOnly true here
       authenticationData: {
         ...authenticationData,
+        authenticationOnly:true
       },
       countryCode: "NL",
       shopperName: {

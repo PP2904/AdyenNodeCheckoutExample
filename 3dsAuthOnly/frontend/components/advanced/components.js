@@ -11,6 +11,9 @@ const componentsInit = async () => {
   console.log("init of components advanced flow.");
   const url = window.location.href;
 
+ 
+//*** redirect flow ***
+
   if (url.indexOf("redirectResult") !== -1) {
     console.log("redirectResult in the url");
     const requestData = parseRedirectResultToRequestData(url);
@@ -20,6 +23,9 @@ const componentsInit = async () => {
     console.log("/payments/details response:", paymentDetailsResponse);
 
     renderResultTemplate(paymentDetailsResponse.resultCode);
+
+//*** native flow ***
+
   } else {
     // first get all available payment methods
     const paymentMethods = await getPaymentMethods();
@@ -28,13 +34,23 @@ const componentsInit = async () => {
 
     const onAdditionalDetails = async (state, component) => {
       console.log("onadditionaldetails event", state);
-      const requestData = {
+      /* const requestData = {
         ...state.data,
+      }; */
+
+      const requestData = {
+        ...state.data, // includes { details: { threeDSResult: "12345" } }
+        authenticationData: {
+          authenticationOnly: true,
+        },
       };
+    
 
       const paymentDetailsResponse = await postDoPaymentDetails(requestData);
+      console.log("requestData for payments/details line 50: ", requestData)
       component.unmount();
       renderResultTemplate(paymentDetailsResponse.resultCode);
+      console.log("payments details response: ",paymentDetailsResponse)
     };
 
     const onSubmit = async (state, component) => {
