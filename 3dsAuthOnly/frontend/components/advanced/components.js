@@ -17,10 +17,12 @@ const componentsInit = async () => {
   if (url.indexOf("redirectResult") !== -1) {
     console.log("redirectResult in the url");
     const requestData = parseRedirectResultToRequestData(url);
-
+    console.log("this is the requestData for redirect flow: ", requestData)
+    //how does auth only work for redirect? (Check slide 8 Yuu)
     const paymentDetailsResponse = await postDoPaymentDetails(requestData);
 
     console.log("/payments/details response:", paymentDetailsResponse);
+    console.log("Auth-only response for redirect is here: ", paymentDetailsResponse.additionalData)
 
     renderResultTemplate(paymentDetailsResponse.resultCode);
 
@@ -55,9 +57,25 @@ const componentsInit = async () => {
 
     const onSubmit = async (state, component) => {
       console.log("component on submit event", state, component);
+      //payments call
       if (state.isValid) {
         const flow = getFlowType(); // native or redirect
-        const paymentResponse = await postDoPayment(state.data, { url, flow });
+        console.log("this is the state.data for /payments call: ", state.data)
+
+        const requestDataPayments = {
+          ...state.data,
+          authenticationData: {
+            authenticationOnly: true,
+            threeDSRequestData:{
+              nativeThreeDS: "preferred"
+            }
+          },
+        };
+
+        console.log("this is the requestData for /payments call: ", requestDataPayments)
+
+
+        const paymentResponse = await postDoPayment(requestDataPayments, { url, flow });
         if (paymentResponse.resultCode === "Authorised") {
           console.log(`response is ${paymentResponse.resultCode}, unmounting component and rendering result`);
           component.unmount();
