@@ -18,7 +18,7 @@ const componentsInit = async () => {
     console.log("redirectResult in the url");
     const requestData = parseRedirectResultToRequestData(url);
     console.log("this is the requestData for redirect flow: ", requestData)
-    //how does auth only work for redirect? (Check slide 8 Yuu)
+    //TODO: how does auth only work for redirect? (Check slide 8 Yuu)
     const paymentDetailsResponse = await postDoPaymentDetails(requestData);
 
     console.log("/payments/details response:", paymentDetailsResponse);
