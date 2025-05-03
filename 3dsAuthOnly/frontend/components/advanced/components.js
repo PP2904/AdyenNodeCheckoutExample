@@ -36,10 +36,7 @@ const componentsInit = async () => {
 
     const onAdditionalDetails = async (state, component) => {
       console.log("onadditionaldetails event", state);
-      /* const requestData = {
-        ...state.data,
-      }; */
-
+ 
       const requestData = {
         ...state.data, // includes { details: { threeDSResult: "12345" } }
         authenticationData: {
@@ -57,10 +54,9 @@ const componentsInit = async () => {
 
     const onSubmit = async (state, component) => {
       console.log("component on submit event", state, component);
-      //payments call
       if (state.isValid) {
         const flow = getFlowType(); // native or redirect
-        console.log("this is the state.data for /payments call: ", state.data)
+        //console.log("this is the state.data for /payments call: ", state.data)
 
         const requestDataPayments = {
           ...state.data,
@@ -74,7 +70,7 @@ const componentsInit = async () => {
 
         console.log("this is the requestData for /payments call: ", requestDataPayments)
 
-
+        //payments call
         const paymentResponse = await postDoPayment(requestDataPayments, { url, flow });
         if (paymentResponse.resultCode === "Authorised") {
           console.log(`response is ${paymentResponse.resultCode}, unmounting component and rendering result`);
