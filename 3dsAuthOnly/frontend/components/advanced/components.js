@@ -7,6 +7,8 @@ import { renderResultTemplate, attachClickHandlerForReset, parseRedirectResultTo
 
 const CLIENT_KEY = import.meta.env.ADYEN_CLIENT_KEY;
 
+const flow = getFlowType(); // native or redirectxw
+
 const componentsInit = async () => {
   console.log("init of components advanced flow.");
   const url = window.location.href;
@@ -29,34 +31,21 @@ const componentsInit = async () => {
 //*** native flow ***
 
   } else {
-    // first get all available payment methods
+    // 1) get all available payment methods
     const paymentMethods = await getPaymentMethods();
 
     console.log("paymentMethods response:", paymentMethods);
 
-    const onAdditionalDetails = async (state, component) => {
-      console.log("onadditionaldetails event", state);
- 
-      const requestData = {
-        ...state.data, // includes { details: { threeDSResult: "12345" } }
-        authenticationData: {
-          authenticationOnly: true,
-        },
-      };
-    
-
-      const paymentDetailsResponse = await postDoPaymentDetails(requestData);
-      console.log("requestData for payments/details line 50: ", requestData)
-      component.unmount();
-      renderResultTemplate(paymentDetailsResponse.resultCode);
-      console.log("payments details response: ",paymentDetailsResponse)
-    };
-
+    //2) payments call (auth-only)
     const onSubmit = async (state, component) => {
       console.log("component on submit event", state, component);
       if (state.isValid) {
-        const flow = getFlowType(); // native or redirect
-        //console.log("this is the state.data for /payments call: ", state.data)
+        console.log("this is the state.data for /payments call: ", state.data)
+
+        //use the payment method details in the Authorisation request (step 4)
+        let paymentMethodDetailsPaymentsAuth = state.data;
+
+        console.log("the paymentMethodDetails: ", paymentMethodDetailsPaymentsAuth);
 
         const requestDataPayments = {
           ...state.data,
@@ -68,19 +57,77 @@ const componentsInit = async () => {
           },
         };
 
+
         console.log("this is the requestData for /payments call: ", requestDataPayments)
 
-        //payments call
+        //ayments call (Auth-only)
         const paymentResponse = await postDoPayment(requestDataPayments, { url, flow });
         if (paymentResponse.resultCode === "Authorised") {
           console.log(`response is ${paymentResponse.resultCode}, unmounting component and rendering result`);
-          component.unmount();
+          //component.unmount();
           renderResultTemplate(paymentResponse.resultCode);
         } else {
           console.log("paymentResponse includes an action, passing action to component.handleAction function.");
           component.handleAction(paymentResponse.action); // pass the response action object into the dropinHandleAction function
         }
       }
+    };
+
+    const onAdditionalDetails = async (state, component) => {
+      console.log("onadditionaldetails event", state);
+ 
+      const requestDataPaymentsDetails = {
+        // state.data = { details: { threeDSResult: "12345" } }
+        //instead of threeds2.fingerprint we have to send in threeDSResult
+        ...state.data, 
+        authenticationData: {
+          authenticationOnly: true,
+        },
+      };
+
+      console.log("this is the state.data for /payments/details call: ", state.data)
+    
+      // 3) payments/details (getting the 3DS data back to handle Authorisation as a next step)
+
+      const paymentDetailsResponse = await postDoPaymentDetails(requestDataPaymentsDetails);
+      console.log("requestData for payments/details line 54: ", requestDataPaymentsDetails)
+      //component.unmount();
+      renderResultTemplate(paymentDetailsResponse.resultCode);
+      console.log("payments details response for Authorisation: ",paymentDetailsResponse)
+
+      //TBD
+      //4) payments/details request (Authorisation request using 3ds and MPI data)
+
+     // console.log("this is the state.data for /payments/details Authorisation call: ", state.data)
+
+      const requestDataPaymentsDetailsAuthorisation = {
+        //tbd 
+        amount: {
+        currency: "EUR",
+        value: 1000
+        },
+        reference: "YOUR_ORDER_NUMBER",
+        mpiData: {
+          cavv: paymentDetailsResponse.additionalData.cavv,
+          eci: paymentDetailsResponse.threeds2.threeDS2Result.eci,
+          dsTransID:paymentDetailsResponse.threeds2.threeDS2Result.dsTransID,
+          directoryResponse: paymentDetailsResponse.threeds2.threeDS2Result.directoryResponse,
+          authenticationResponse: paymentDetailsResponse.threeds2.threeDS2Result.authenticationResponse,
+          threeDSVersion: paymentDetailsResponse.threeds2.threeDS2Result.threeDSVersion,
+          cavvAlgorithm : paymentDetailsResponse.threeds2.threeDS2Result.cavvAlgorithm,
+          riskScore: paymentDetailsResponse.threeds2.threeDS2Result.riskScore
+        },
+        paymentMethod: {
+          paymentMethodDetailsPaymentsAuth
+        },      
+      };
+
+      const paymentDetailsAuthorisationResponse = await postDoPayment(requestDataPaymentsDetailsAuthorisation, { url, flow });
+      console.log("requestData for payments (Authorisation) line 61: ", paymentDetailsAuthorisationResponse)
+      component.unmount();
+      renderResultTemplate(paymentDetailsAuthorisationResponse.resultCode);
+      console.log("payments Authorisation response: ",paymentDetailsAuthorisationResponse)
+
     };
 
     // create configuration object to pass into AdyenCheckout

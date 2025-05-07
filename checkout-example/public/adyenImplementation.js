@@ -107,6 +107,10 @@ async function createAdyenCheckout(session) {
       twint: {
         amount: { currency: selectedCurrency, value: 10000 },
       },
+      klarna: {
+        name:"KlarnaCustomName",
+        amount: { currency: selectedCurrency, value: 10000 },
+      },
     },
 
       //+++++++
