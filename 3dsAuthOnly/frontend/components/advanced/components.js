@@ -43,7 +43,7 @@ const componentsInit = async () => {
         console.log("this is the state.data for /payments call: ", state.data)
 
         //use the payment method details in the Authorisation request (step 4)
-        let paymentMethodDetailsPaymentsAuth = state.data;
+        let paymentMethodDetailsPaymentsAuth = state.data.paymentMethod;
 
         console.log("the paymentMethodDetails: ", paymentMethodDetailsPaymentsAuth);
 
@@ -98,7 +98,7 @@ const componentsInit = async () => {
       //TBD
       //4) payments/details request (Authorisation request using 3ds and MPI data)
 
-     // console.log("this is the state.data for /payments/details Authorisation call: ", state.data)
+     console.log("this is payment method for Authorisation: ", paymentMethodDetailsPaymentsAuth)
 
       const requestDataPaymentsDetailsAuthorisation = {
         //tbd 
@@ -122,8 +122,10 @@ const componentsInit = async () => {
         },      
       };
 
-      const paymentDetailsAuthorisationResponse = await postDoPayment(requestDataPaymentsDetailsAuthorisation, { url, flow });
       console.log("requestData for payments (Authorisation) line 61: ", paymentDetailsAuthorisationResponse)
+
+
+      const paymentDetailsAuthorisationResponse = await postDoPayment(requestDataPaymentsDetailsAuthorisation, { url, flow });
       component.unmount();
       renderResultTemplate(paymentDetailsAuthorisationResponse.resultCode);
       console.log("payments Authorisation response: ",paymentDetailsAuthorisationResponse)
