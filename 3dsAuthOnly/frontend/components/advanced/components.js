@@ -1,49 +1,58 @@
 import AdyenCheckout from "@adyen/adyen-web";
 import "@adyen/adyen-web/dist/adyen.css";
 
-import { getPaymentMethods, postDoPayment, postDoPaymentDetails } from "../../shared/payments";
+import {
+  getPaymentMethods,
+  postDoPayment,
+  postDoPaymentDetails
+} from "../../shared/payments";
 
-import { renderResultTemplate, attachClickHandlerForReset, parseRedirectResultToRequestData, getFlowType } from "../../shared/utils";
+import {
+  renderResultTemplate,
+  attachClickHandlerForReset,
+  parseRedirectResultToRequestData,
+  getFlowType
+} from "../../shared/utils";
 
 const CLIENT_KEY = import.meta.env.ADYEN_CLIENT_KEY;
+const flow = getFlowType(); // native or redirect
 
-const flow = getFlowType(); // native or redirectxw
+// ✅ Declare shared variables for reuse across functions
+let paymentMethodDetailsPaymentsAuth = null;
+let globalBrowserInfo;
+let paymentDetailsResponseGlobal = null; // 🆕 store payment details for final authorisation step
 
 const componentsInit = async () => {
   console.log("init of components advanced flow.");
   const url = window.location.href;
 
- 
-//*** redirect flow ***
-
+  // *** redirect flow ***
   if (url.indexOf("redirectResult") !== -1) {
     console.log("redirectResult in the url");
     const requestData = parseRedirectResultToRequestData(url);
-    console.log("this is the requestData for redirect flow: ", requestData)
-    //TODO: how does auth only work for redirect? (Check slide 8 Yuu)
+    console.log("this is the requestData for redirect flow: ", requestData);
+    
     const paymentDetailsResponse = await postDoPaymentDetails(requestData);
-
     console.log("/payments/details response:", paymentDetailsResponse);
-    console.log("Auth-only response for redirect is here: ", paymentDetailsResponse.additionalData)
+    console.log("Auth-only response for redirect is here: ", paymentDetailsResponse.additionalData);
 
     renderResultTemplate(paymentDetailsResponse.resultCode);
 
-//*** native flow ***
-
+  // *** native flow ***
   } else {
-    // 1) get all available payment methods
+    // 1) Get all available payment methods
     const paymentMethods = await getPaymentMethods();
-
     console.log("paymentMethods response:", paymentMethods);
 
-    //2) payments call (auth-only)
+    // 2) payments call (auth-only)
     const onSubmit = async (state, component) => {
       console.log("component on submit event", state, component);
       if (state.isValid) {
-        console.log("this is the state.data for /payments call: ", state.data)
+        console.log("this is the state.data for /payments call: ", state.data);
 
-        //use the payment method details in the Authorisation request (step 4)
-        let paymentMethodDetailsPaymentsAuth = state.data.paymentMethod;
+        // ✅ Store payment method details for reuse later
+        paymentMethodDetailsPaymentsAuth = state.data.paymentMethod;
+        globalBrowserInfo = state.data.browserInfo;
 
         console.log("the paymentMethodDetails: ", paymentMethodDetailsPaymentsAuth);
 
@@ -51,97 +60,74 @@ const componentsInit = async () => {
           ...state.data,
           authenticationData: {
             authenticationOnly: true,
-            threeDSRequestData:{
+            threeDSRequestData: {
               nativeThreeDS: "preferred"
             }
-          },
+          }
         };
 
+        console.log("this is the requestData for /payments call: ", requestDataPayments);
 
-        console.log("this is the requestData for /payments call: ", requestDataPayments)
-
-        //ayments call (Auth-only)
         const paymentResponse = await postDoPayment(requestDataPayments, { url, flow });
         if (paymentResponse.resultCode === "Authorised") {
           console.log(`response is ${paymentResponse.resultCode}, unmounting component and rendering result`);
-          //component.unmount();
           renderResultTemplate(paymentResponse.resultCode);
         } else {
           console.log("paymentResponse includes an action, passing action to component.handleAction function.");
-          component.handleAction(paymentResponse.action); // pass the response action object into the dropinHandleAction function
+          component.handleAction(paymentResponse.action);
         }
       }
     };
 
+    // 3) payments/details (3DS step and final authorisation)
     const onAdditionalDetails = async (state, component) => {
       console.log("onadditionaldetails event", state);
- 
+
       const requestDataPaymentsDetails = {
-        // state.data = { details: { threeDSResult: "12345" } }
-        //instead of threeds2.fingerprint we have to send in threeDSResult
-        ...state.data, 
+        ...state.data,
         authenticationData: {
-          authenticationOnly: true,
-        },
+          authenticationOnly: true
+        }
       };
 
-      console.log("this is the state.data for /payments/details call: ", state.data)
-    
-      // 3) payments/details (getting the 3DS data back to handle Authorisation as a next step)
+      console.log("this is the state.data for /payments/details call: ", state.data);
 
       const paymentDetailsResponse = await postDoPaymentDetails(requestDataPaymentsDetails);
-      console.log("requestData for payments/details line 54: ", requestDataPaymentsDetails)
-      //component.unmount();
+      console.log("requestData for payments/details line 93: ", requestDataPaymentsDetails);
       renderResultTemplate(paymentDetailsResponse.resultCode);
-      console.log("payments details response for Authorisation: ",paymentDetailsResponse)
+      console.log("payments details response for Authorisation: ", paymentDetailsResponse);
 
-      //TBD
-      //4) payments/details request (Authorisation request using 3ds and MPI data)
+      // ✅ Save for use in paymentAuthorisationResponse
+      paymentDetailsResponseGlobal = paymentDetailsResponse;
 
-     console.log("this is payment method for Authorisation: ", paymentMethodDetailsPaymentsAuth)
+      // ✅ Use shared variable from onSubmit for auth call
+      console.log("this is payment method for Authorisation: ", paymentMethodDetailsPaymentsAuth);
 
-      const requestDataPaymentsDetailsAuthorisation = {
-        //tbd 
-        amount: {
-        currency: "EUR",
-        value: 1000
-        },
-        reference: "YOUR_ORDER_NUMBER",
-        mpiData: {
-          cavv: paymentDetailsResponse.additionalData.cavv,
-          eci: paymentDetailsResponse.threeds2.threeDS2Result.eci,
-          dsTransID:paymentDetailsResponse.threeds2.threeDS2Result.dsTransID,
-          directoryResponse: paymentDetailsResponse.threeds2.threeDS2Result.directoryResponse,
-          authenticationResponse: paymentDetailsResponse.threeds2.threeDS2Result.authenticationResponse,
-          threeDSVersion: paymentDetailsResponse.threeds2.threeDS2Result.threeDSVersion,
-          cavvAlgorithm : paymentDetailsResponse.threeds2.threeDS2Result.cavvAlgorithm,
-          riskScore: paymentDetailsResponse.threeds2.threeDS2Result.riskScore
-        },
-        paymentMethod: {
-          paymentMethodDetailsPaymentsAuth
-        },      
-      };
-
-      console.log("requestData for payments (Authorisation) line 61: ", paymentDetailsAuthorisationResponse)
-
-
-      const paymentDetailsAuthorisationResponse = await postDoPayment(requestDataPaymentsDetailsAuthorisation, { url, flow });
       component.unmount();
-      renderResultTemplate(paymentDetailsAuthorisationResponse.resultCode);
-      console.log("payments Authorisation response: ",paymentDetailsAuthorisationResponse)
 
+      // ✅ Conditionally show "Authorise Payment now!" button if auth was successful
+      const authMsg = document.querySelector(".auth-result-msg");
+      const authoriseBtn = document.getElementById("authorise-btn");
+
+      if (authMsg && authoriseBtn) {
+        if (authMsg.textContent.trim() === "AuthenticationFinished") {
+          authoriseBtn.style.display = "inline-block";
+        } else {
+          authoriseBtn.style.display = "none";
+        }
+      }
     };
 
-    // create configuration object to pass into AdyenCheckout
+    //Create config and mount Adyen Drop-in
     const checkoutConfig = {
       paymentMethodsResponse: paymentMethods,
       locale: "en_US",
       environment: "test",
       clientKey: CLIENT_KEY,
-      analytics: { enabled: false }, // omit or set to true if you want to enable analytics, this can be helpful if we need to debug issues on the Adyen side
+      analytics: { enabled: false },
       onSubmit: onSubmit,
       onAdditionalDetails: onAdditionalDetails,
-      showPayButton: true,
+      showPayButton: true
     };
 
     const checkout = await AdyenCheckout(checkoutConfig);
@@ -151,6 +137,78 @@ const componentsInit = async () => {
     console.log("created and mounted card component to #component-container");
   }
 };
+
+// ✅ Final Authorisation request using 3DS and MPI data
+export async function paymentAuthorisationResponse() {
+  const url = window.location.href;
+
+  if (!paymentDetailsResponseGlobal || !paymentMethodDetailsPaymentsAuth) {
+    console.error("Missing required authentication data. Cannot proceed with authorisation.");
+    return;
+  }
+
+  const requestDataPaymentsAuthorisation = {
+    amount: {
+      currency: "EUR",
+      value: 1000
+    },
+    channel: "Web",
+    reference: "Auth-only_Authorisation_Test",
+    mpiData: {
+      cavv: paymentDetailsResponseGlobal.additionalData?.cavv,
+      eci: paymentDetailsResponseGlobal.additionalData?.["threeds2.threeDS2Result.eci"],
+      dsTransID: paymentDetailsResponseGlobal.additionalData?.["threeds2.threeDS2Result.dsTransID"],
+      //directory response = transStatus from the ARes (Authentication Response).
+      directoryResponse: paymentDetailsResponseGlobal.additionalData?.["threeds2.threeDS2Result.transStatus"],
+      authenticationResponse: paymentDetailsResponseGlobal.additionalData?.threeDAuthenticatedResponse,
+      threeDSVersion: paymentDetailsResponseGlobal.additionalData?.threeDSVersion,
+      //only Cartes Bancaires
+      //cavvAlgorithm: paymentDetailsResponseGlobal.additionalData?.["threeds2.threeDS2Result.cavvAlgorithm"],
+      //only Cartes Bancaires
+      //paymentDetailsResponseGlobal.additionalData?.["threeds2.threeDS2Result.riskScore"]
+      shopperInteraction: "Ecommerce",
+      recurringProcessingModel: "CardOnFile",
+      authenticationData: {
+        attemptAuthentication: "never"
+      }
+    },
+    paymentMethod: paymentMethodDetailsPaymentsAuth,
+    browserInfo: globalBrowserInfo
+  };
+
+  console.log("requestData for payments (Authorisation): ", requestDataPaymentsAuthorisation);
+  
+  //Authorisation payments call
+  const paymentAuthorisationResponse = await postDoPayment(
+    requestDataPaymentsAuthorisation,
+    { url, flow }
+  );
+  renderResultTemplate(paymentAuthorisationResponse.resultCode);
+  console.log("payments Authorisation response: ", paymentAuthorisationResponse);
+}
+
+// ✅ Setup click listener and MutationObserver to toggle button visibility
+document.addEventListener("DOMContentLoaded", () => {
+  const authoriseBtn = document.getElementById("authorise-btn");
+  const authMsg = document.querySelector(".auth-result-msg");
+
+  if (authoriseBtn) {
+    authoriseBtn.style.display = "none"; // hide by default
+    authoriseBtn.addEventListener("click", paymentAuthorisationResponse);
+  }
+
+  // Observe dynamic updates to the auth result message
+  if (authMsg) {
+    const observer = new MutationObserver(() => {
+      if (authMsg.textContent.trim() === "AuthenticationFinished") {
+        authoriseBtn.style.display = "inline-block";
+      } else {
+        authoriseBtn.style.display = "none";
+      }
+    });
+    observer.observe(authMsg, { childList: true, subtree: true });
+  }
+});
 
 attachClickHandlerForReset();
 componentsInit();
