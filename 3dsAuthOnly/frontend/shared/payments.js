@@ -1,18 +1,29 @@
+//paymentMethods call
 export const getPaymentMethods = async () => {
   console.log("Do /paymentMethods GET request");
+  const paymentMethodUrl = `/api/paymentMethods`;
   const response = await fetch("/api/paymentMethods");
+
+  //how would shopperConversionId work with paymentMethods call?
+  //A: defining it on the backend (payments.service.ts)
+
   return await response.json();
 };
 
+//payments call
 export const postDoPayment = async (data, { url, flow }) => {
   const paymentsUrl = `/api/payments/${flow}`;
 
-  console.log(`Do ${paymentsUrl} POST request with: ${data}`);
+  //console.log(`Do ${paymentsUrl} POST request with: ${data}`);
+  console.log(`Do ${paymentsUrl} POST request to: ${paymentsUrl}`);
+  console.log("Request data payload:", data);
 
   const requestBody = { data, url };
   const clonedRequestBody = JSON.parse(JSON.stringify(requestBody)); // Clone the object
 console.log("Cloned Payment Request Body:", clonedRequestBody.data); // Logs the static snapshot
-console.dir("console.dir: ", clonedRequestBody.data); // Logs it in an expandable format
+//console.dir("console.dir: ", clonedRequestBody.data); // Logs it in an expandable format
+console.dir(clonedRequestBody.data, { depth: null });
+
   const response = await fetch(paymentsUrl, {
     method: "POST",
     headers: {
@@ -20,10 +31,10 @@ console.dir("console.dir: ", clonedRequestBody.data); // Logs it in an expandabl
     },
     body: JSON.stringify(requestBody),
   });
-  console.log("payments response ", response)
   return await response.json();
 };
 
+//paymentsDetails call
 export const postDoPaymentDetails = async (data) => {
   console.log(`Do /payments/details POST request with: ${data}`);
   const response = await fetch("/api/paymentDetails", {

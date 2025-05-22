@@ -56,13 +56,50 @@ const componentsInit = async () => {
 
         console.log("the paymentMethodDetails: ", paymentMethodDetailsPaymentsAuth);
 
-        const requestDataPayments = {
+        /* const requestDataPayments = {
           ...state.data,
+          paymentMethod: {
+            ...state.data.paymentMethod,
+            // Replace with the desired value
+            holderName: "Hans Wurst"
+          },
+          shopperConversionId: `shopper123`,
           authenticationData: {
             authenticationOnly: true,
             threeDSRequestData: {
               nativeThreeDS: "preferred"
             }
+          },
+          metaData: {
+            testData: `1234`
+          }
+        };
+         */
+
+        const requestDataPayments = {
+          paymentMethod: {
+            ...state.data.paymentMethod,
+            holderName: "Hans Wurst"
+          },
+          browserInfo: state.data.browserInfo,
+          billingAddress: state.data.billingAddress,
+          deliveryAddress: state.data.deliveryAddress,
+          shopperName: state.data.shopperName,
+          //shopperEmail: state.data.shopperEmail,
+          shopperIP: state.data.shopperIP,
+          amount: {
+            currency: "EUR",
+            value: 1000
+          },
+          authenticationData: {
+            authenticationOnly: true,
+            threeDSRequestData: {
+              nativeThreeDS: "preferred"
+            }
+          },
+          shopperConversionId: `shopper123`,
+          metaData: {
+            testData: `1234`
           }
         };
 
@@ -87,13 +124,17 @@ const componentsInit = async () => {
         ...state.data,
         authenticationData: {
           authenticationOnly: true
+        },
+        shopperConversionId: `shopper123`,
+        metaData: {
+          testData: `1234`
         }
       };
 
       console.log("this is the state.data for /payments/details call: ", state.data);
 
       const paymentDetailsResponse = await postDoPaymentDetails(requestDataPaymentsDetails);
-      console.log("requestData for payments/details line 93: ", requestDataPaymentsDetails);
+      console.log("requestData for payments/details line 98: ", requestDataPaymentsDetails);
       renderResultTemplate(paymentDetailsResponse.resultCode);
       console.log("payments details response for Authorisation: ", paymentDetailsResponse);
 

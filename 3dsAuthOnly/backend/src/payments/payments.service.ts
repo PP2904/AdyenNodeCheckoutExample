@@ -1,8 +1,3 @@
-/**
- * This payments service uses the CheckoutAPI from the @adyen/api-library to make payment requests
- * It has examples for /sessions flow and advanced flow - /paymentMethods, /payments, /payments/details
- */
-
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { v4 as uuid } from "uuid";
@@ -22,262 +17,105 @@ import { PaymentsApi } from "@adyen/api-library/lib/src/services/checkout/paymen
 
 @Injectable()
 export class PaymentsService {
-  API_KEY: string;
-  MERCHANT_ACCOUNT: string;
-
-  paymentsAPI: PaymentsApi;
+  private API_KEY: string;
+  private MERCHANT_ACCOUNT: string;
+  private paymentsAPI: PaymentsApi;
 
   constructor(private configService: ConfigService) {
     this.API_KEY = this.configService.get<string>("ADYEN_API_KEY");
     this.MERCHANT_ACCOUNT = this.configService.get<string>("ADYEN_MERCHANT_ACCOUNT");
 
-    // initialise the client object
     const client: Client = new Client({
       apiKey: this.API_KEY,
       environment: "TEST",
     });
 
-    // intialise the API object with the client object
-    this.paymentsAPI = new CheckoutAPI(client).PaymentsApi; //CheckoutAPI exports a number of helpers for different API's, since we want to use Payments API we want a reference to PaymentsAPI
+    this.paymentsAPI = new CheckoutAPI(client).PaymentsApi;
   }
 
-  /**
-   * Advanced Flow:
-   * Example of /paymentsMethods request
-   * @returns PaymentMethodsResponse
-   */
   async postForPaymentMethods(): Promise<PaymentMethodsResponse> {
     const postData = {
       merchantAccount: this.MERCHANT_ACCOUNT,
     };
 
-    const paymentMethodsResponse: PaymentMethodsResponse = await this.paymentsAPI.paymentMethods({
-      ...postData,
-    });
-
-    return paymentMethodsResponse;
+    return await this.paymentsAPI.paymentMethods(postData);
   }
 
   /**
-   * Advanced Flow:
-   * Example of /payments request for native flow
-   *
-   * For both native or redirect the more information you pass to the /payments request the higher chance for a frictionless flow (no challenge)
-   * we recommend you at least pass these fields:
-   *  countryCode: string;
-      shopperName: {
-        firstName: string;
-        lastName: string;
-      },
-      telephoneNumber: "0612345678",
-      billingAddress: {
-        houseNumberOrName: "1",
-        street: "Shopper Billing Street",
-        city: "Amsterdam",
-        country: "NL",
-        postalCode: "1234AB",
-      },
-      deliveryAddress: {
-        houseNumberOrName: "1",
-        street: "Shopper Delivery Street",
-        city: "Amsterdam",
-        country: "NL",
-        postalCode: "1234AB",
-      },
-      shopperIP: string;
-      shopperEmail: string;
-      Please note:
-      it is better to omit these fields than pass static values, only populate these with real data from your shopper, otherwise it could result in higher challenge rate
-   *
-   *
-   * @param {data, url}, data from the client, return url
-   * @returns PaymentResponse
+   * Handle native payments using full frontend data, with fallbacks.
    */
   async postForPaymentsNative({ data, url }): Promise<PaymentResponse> {
-    const reference = uuid(); // generate a unique reference id
+    const reference = uuid();
 
     const authenticationData: AuthenticationData = {
       threeDSRequestData: {
-        challengeWindowSize: ThreeDSRequestData.ChallengeWindowSizeEnum._05, // here you can pass the size of the challenge window, this defaults to 05 which is 100%
-        nativeThreeDS: ThreeDSRequestData.NativeThreeDSEnum.Preferred, // set 'preferred' for Native
+        challengeWindowSize: ThreeDSRequestData.ChallengeWindowSizeEnum._05,
+        nativeThreeDS: ThreeDSRequestData.NativeThreeDSEnum.Preferred,
       },
+      authenticationOnly: true,
     };
 
     const paymentRequestData: PaymentRequest = {
-      amount: {
-        currency: "EUR",
-        value: 1000,
-      },
-      //adding authenticationOnly true here
-      authenticationData: {
-        ...authenticationData,
-        authenticationOnly:true
-      },
-      countryCode: "NL",
-      shopperName: {
-        firstName: "Test",
-        lastName: "Shopper",
-      },
-      telephoneNumber: "0612345678",
-      billingAddress: {
-        houseNumberOrName: "1",
-        street: "Shopper Billing Street",
-        city: "Amsterdam",
-        country: "NL",
-        postalCode: "1234AB",
-      },
-      deliveryAddress: {
-        houseNumberOrName: "1",
-        street: "Shopper Delivery Street",
-        city: "Amsterdam",
-        country: "NL",
-        postalCode: "1234AB",
-      },
-      shopperIP: "http://192.0.2.1/",
-      shopperEmail: "test@adyen.com",
-      channel: PaymentRequest.ChannelEnum.Web, // required for native
-      browserInfo: data.browserInfo, // required for native
-      origin: url, // required for native
-      reference: reference,
-      paymentMethod: data.paymentMethod, // this is the paymentMethod object from the state.data object returned from the submit on the dropin component from the client
+      ...data, // Spread full frontend payload (browserInfo, paymentMethod, shopperName, etc.)
+
+      reference,
       returnUrl: url,
+      origin: url,
       merchantAccount: this.MERCHANT_ACCOUNT,
+      authenticationData,
+      shopperConversionId: `shopper123`,
+          metaData: {
+            testData: `1234`
+          },
+
+      // Fallbacks
+      amount: data.amount || { currency: "EUR", value: 1000 },
+      channel: data.channel || PaymentRequest.ChannelEnum.Web,
     };
 
-    const paymentResponse: PaymentResponse = await this.paymentsAPI.payments(paymentRequestData);
-
-    return paymentResponse;
+    return await this.paymentsAPI.payments(paymentRequestData);
   }
+
+    /**
+   * Handle native payments using full frontend data, with fallbacks.
+   */
+   /*  async postForPaymentsAuthorisationNative({ data, url }): Promise<PaymentResponse> {
+     //tbd
+    } */
+
   /**
-   * Advanced Flow:
-   * Example of /payments request for redirect flow (redirect flow is the default flow for 3DS2)
-   *
-   * For both native or redirect the more information you pass to the /payments request the higher chance for a frictionless flow (no challenge)
-   * we recommend you at least pass these fields:
-   *  countryCode: string;
-      shopperName: {
-        firstName: string;
-        lastName: string;
-      },
-      telephoneNumber: "0612345678",
-      billingAddress: {
-        houseNumberOrName: "1",
-        street: "Shopper Billing Street",
-        city: "Amsterdam",
-        country: "NL",
-        postalCode: "1234AB",
-      },
-      deliveryAddress: {
-        houseNumberOrName: "1",
-        street: "Shopper Delivery Street",
-        city: "Amsterdam",
-        country: "NL",
-        postalCode: "1234AB",
-      },
-      shopperIP: string;
-      shopperEmail: string;
-      Please note:
-      it is better to omit these fields than pass static values, only populate these with real data from your shopper, otherwise it could result in higher challenge rate
-   *
-   * @param {data, url}, data from the client, return url
-   * @returns PaymentResponse
+   * Handle redirect-based payments (3DS2 default flow).
    */
   async postForPaymentsRedirect({ data, url }): Promise<PaymentResponse> {
-    const reference = uuid(); // generate a unique reference id
+    const reference = uuid();
 
     const paymentRequestData: PaymentRequest = {
-      amount: {
-        currency: "EUR",
-        value: 1000,
-      },
-      countryCode: "NL",
-      shopperName: {
-        firstName: "Test",
-        lastName: "Shopper",
-      },
-      telephoneNumber: "0612345678",
-      billingAddress: {
-        houseNumberOrName: "1",
-        street: "Shopper Billing Street",
-        city: "Amsterdam",
-        country: "NL",
-        postalCode: "1234AB",
-      },
-      deliveryAddress: {
-        houseNumberOrName: "1",
-        street: "Shopper Delivery Street",
-        city: "Amsterdam",
-        country: "NL",
-        postalCode: "1234AB",
-      },
-      shopperIP: "http://192.0.2.1/",
-      shopperEmail: "test@adyen.com",
-      channel: PaymentRequest.ChannelEnum.Web,
-      browserInfo: data.browserInfo, // this is the browserInfo object from the state.data object returned from the submit event on the dropin or component from the client
+      ...data,
+
+      reference,
+      returnUrl: url,
       origin: url,
-      reference: reference,
-      paymentMethod: data.paymentMethod, // this is the paymentMethod object from the state.data object returned from the submit event on the dropin or component from the client
-      returnUrl: url, // the url you want the shopper to be returned to after redirect (this url is where the redirectData will be appended to on redirect back)
       merchantAccount: this.MERCHANT_ACCOUNT,
+
+      amount: data.amount || { currency: "EUR", value: 1000 },
+      channel: data.channel || PaymentRequest.ChannelEnum.Web,
     };
 
-    const paymentResponse: PaymentResponse = await this.paymentsAPI.payments(paymentRequestData);
-
-    return paymentResponse;
+    return await this.paymentsAPI.payments(paymentRequestData);
   }
 
   /**
-   * Advanced Flow:
-   * Example of /payments/details call
-   *
-   * @param PaymentCompletionDetails
-   * if redirect we want to pass the redirectResult which was appended to our returnURL in the details property of the paymentDetailsRequest object
-   * if native we want to pass the state.data response from the onAdditionalDetails event in the dropin in the details property of the paymentDetailsRequest object
-   *
-   * @returns PaymentDetailsResponse
+   * Handle /payments/details for 3DS authentication step.
    */
   async postForPaymentDetails({ details }: { details: PaymentCompletionDetails }): Promise<PaymentDetailsResponse> {
-    const paymentDetailsResponse: PaymentDetailsResponse = await this.paymentsAPI.paymentsDetails({ details });
-
-    return paymentDetailsResponse;
+    return await this.paymentsAPI.paymentsDetails({ details });
   }
 
   /**
-   * Sessions Flow:
-   * Example of /sessions request
-   *
-   * The more information you pass to the /sessions request the higher chance for a frictionless flow (no challenge)
-   * we recommend you at least pass these fields:
-   *  countryCode: string;
-      shopperName: {
-        firstName: string;
-        lastName: string;
-      },
-      telephoneNumber: "0612345678",
-      billingAddress: {
-        houseNumberOrName: "1",
-        street: "Shopper Billing Street",
-        city: "Amsterdam",
-        country: "NL",
-        postalCode: "1234AB",
-      },
-      deliveryAddress: {
-        houseNumberOrName: "1",
-        street: "Shopper Delivery Street",
-        city: "Amsterdam",
-        country: "NL",
-        postalCode: "1234AB",
-      },
-      shopperIP: string;
-      shopperEmail: string;
-      Please note:
-      it is better to omit these fields than pass static values, only populate these with real data from your shopper, otherwise it could result in higher challenge rate
-   *
-   * @param url - the return url
-   * @returns CreateCheckoutSessionResponse
+   * Handle /sessions flow (Drop-in).
    */
   async postForSessions({ url }): Promise<CreateCheckoutSessionResponse> {
-    const reference = uuid(); // generate a unique reference id
+    const reference = uuid();
 
     const sessionsRequestData: CreateCheckoutSessionRequest = {
       amount: {
@@ -312,7 +150,6 @@ export class PaymentsService {
       merchantAccount: this.MERCHANT_ACCOUNT,
     };
 
-    const sessionsResponse = await this.paymentsAPI.sessions(sessionsRequestData);
-    return sessionsResponse;
+    return await this.paymentsAPI.sessions(sessionsRequestData);
   }
 }
