@@ -220,6 +220,7 @@ export async function paymentAuthorisationResponse() {
   console.log("requestData for payments (Authorisation): ", requestDataPaymentsAuthorisation);
   
   //Authorisation payments call
+  //postDoPayment is defined/implemented in payments.js (...3dsAuthOnly/frontend/shared/payments.js)
   const paymentAuthorisationResponse = await postDoPayment(
     requestDataPaymentsAuthorisation,
     { url, flow }

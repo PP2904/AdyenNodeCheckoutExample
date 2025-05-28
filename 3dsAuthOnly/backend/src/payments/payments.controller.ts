@@ -15,6 +15,8 @@ export class PaymentsController {
     return this.paymentService.postForPaymentsRedirect(requestBody);
   }
 
+  //this controller exponses the /payments/native endpoint for the frontend to call
+  // and eventually calls the postForPaymentsNative function in ...3dsAuthOnly/backend/src/payments/payments.service.ts
   @Post("/payments/native")
   postPaymentsNative(@Body() requestBody: any): Promise<any> {
     return this.paymentService.postForPaymentsNative(requestBody);

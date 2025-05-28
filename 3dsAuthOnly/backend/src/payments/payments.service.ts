@@ -34,8 +34,11 @@ export class PaymentsService {
   }
 
   async postForPaymentMethods(): Promise<PaymentMethodsResponse> {
+    console.log("postForPaymentMethods called")
     const postData = {
       merchantAccount: this.MERCHANT_ACCOUNT,
+      //why are changes here not reflected?
+      //shopperConversionId: "shopper123"
     };
 
     return await this.paymentsAPI.paymentMethods(postData);
@@ -44,7 +47,9 @@ export class PaymentsService {
   /**
    * Handle native payments using full frontend data, with fallbacks.
    */
+  //gets called by the postDoPayment() in the frontend via the controller
   async postForPaymentsNative({ data, url }): Promise<PaymentResponse> {
+    console.log("postForPaymentsNative called")
     const reference = uuid();
 
     const authenticationData: AuthenticationData = {
@@ -72,6 +77,8 @@ export class PaymentsService {
       amount: data.amount || { currency: "EUR", value: 1000 },
       channel: data.channel || PaymentRequest.ChannelEnum.Web,
     };
+    console.log("postForPaymentsNative called and the data: ",data)
+    console.log("postForPaymentsNative called and the payload: ",paymentRequestData)
 
     return await this.paymentsAPI.payments(paymentRequestData);
   }
@@ -108,6 +115,7 @@ export class PaymentsService {
    * Handle /payments/details for 3DS authentication step.
    */
   async postForPaymentDetails({ details }: { details: PaymentCompletionDetails }): Promise<PaymentDetailsResponse> {
+    console.log("postForPaymentDetails called")
     return await this.paymentsAPI.paymentsDetails({ details });
   }
 

@@ -11,6 +11,7 @@ export const getPaymentMethods = async () => {
 };
 
 //payments call
+//postDoPayment is calling @Post("/payments/native") in ...3dsAuthOnly/backend/src/payments/payments.controller.ts
 export const postDoPayment = async (data, { url, flow }) => {
   const paymentsUrl = `/api/payments/${flow}`;
 
