@@ -63,10 +63,12 @@ export class PaymentsService {
     const paymentRequestData: PaymentRequest = {
       ...data, // Spread full frontend payload (browserInfo, paymentMethod, shopperName, etc.)
 
+      //these fields are added in the backend
       reference,
       returnUrl: url,
       origin: url,
       merchantAccount: this.MERCHANT_ACCOUNT,
+      //authenticationData overrides the data sent from FE
       authenticationData,
       shopperConversionId: `shopper123`,
           metaData: {
@@ -81,6 +83,39 @@ export class PaymentsService {
     console.log("postForPaymentsNative called and the payload: ",paymentRequestData)
 
     return await this.paymentsAPI.payments(paymentRequestData);
+  }
+
+
+ /** AUTHORISATION BUTTON 
+   * Handle native payment; using full frontend data
+   */
+  async postPaymentsAuthorisation({ data, url }): Promise<PaymentResponse> {
+    console.log("postPaymentsAuthorisation called")
+    const reference = uuid();
+
+    const paymentAuthorisationRequestData: PaymentRequest = {
+      ...data, // Spread full frontend payload (browserInfo, paymentMethod, shopperName, etc.)
+
+      //these fields are added in the backend
+      reference,
+      returnUrl: url,
+      origin: url,
+      merchantAccount: this.MERCHANT_ACCOUNT,
+      //authenticationData overrides the data sent from FE
+      authenticationData:{
+        attemptAuthentication:'never',
+      },
+      shopperConversionId: `shopper123`,
+      metaData: {
+            testData: `1234`
+          },
+
+      // Fallbacks
+      amount: data.amount || { currency: "EUR", value: 1000 },
+      channel: data.channel || PaymentRequest.ChannelEnum.Web,
+    };  
+
+    return await this.paymentsAPI.payments(paymentAuthorisationRequestData);
   }
 
     /**

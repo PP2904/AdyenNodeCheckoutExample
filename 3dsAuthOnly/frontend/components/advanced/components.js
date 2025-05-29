@@ -4,7 +4,8 @@ import "@adyen/adyen-web/dist/adyen.css";
 import {
   getPaymentMethods,
   postDoPayment,
-  postDoPaymentDetails
+  postDoPaymentDetails,
+ postDoPaymentAuthorisation
 } from "../../shared/payments";
 
 import {
@@ -134,7 +135,7 @@ const componentsInit = async () => {
       console.log("this is the state.data for /payments/details call: ", state.data);
 
       const paymentDetailsResponse = await postDoPaymentDetails(requestDataPaymentsDetails);
-      console.log("requestData for payments/details line 98: ", requestDataPaymentsDetails);
+      console.log("requestData for payments/details: ", requestDataPaymentsDetails);
       renderResultTemplate(paymentDetailsResponse.resultCode);
       console.log("payments details response for Authorisation: ", paymentDetailsResponse);
 
@@ -221,7 +222,7 @@ export async function paymentAuthorisationResponse() {
   
   //Authorisation payments call
   //postDoPayment is defined/implemented in payments.js (...3dsAuthOnly/frontend/shared/payments.js)
-  const paymentAuthorisationResponse = await postDoPayment(
+  const paymentAuthorisationResponse = await postDoPaymentAuthorisation(
     requestDataPaymentsAuthorisation,
     { url, flow }
   );
@@ -236,6 +237,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (authoriseBtn) {
     authoriseBtn.style.display = "none"; // hide by default
+    //authorise button click is calling a function
     authoriseBtn.addEventListener("click", paymentAuthorisationResponse);
   }
 
