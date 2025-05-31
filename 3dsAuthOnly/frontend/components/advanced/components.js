@@ -5,7 +5,7 @@ import {
   getPaymentMethods,
   postDoPayment,
   postDoPaymentDetails,
- postDoPaymentAuthorisation
+  postDoPaymentAuthorisation
 } from "../../shared/payments";
 
 import {
@@ -21,7 +21,7 @@ const flow = getFlowType(); // native or redirect
 // ✅ Declare shared variables for reuse across functions
 let paymentMethodDetailsPaymentsAuth = null;
 let globalBrowserInfo;
-let paymentDetailsResponseGlobal = null; // 🆕 store payment details for final authorisation step
+let paymentDetailsResponseGlobal = null;
 
 const componentsInit = async () => {
   console.log("init of components advanced flow.");
@@ -32,7 +32,7 @@ const componentsInit = async () => {
     console.log("redirectResult in the url");
     const requestData = parseRedirectResultToRequestData(url);
     console.log("this is the requestData for redirect flow: ", requestData);
-    
+
     const paymentDetailsResponse = await postDoPaymentDetails(requestData);
     console.log("/payments/details response:", paymentDetailsResponse);
     console.log("Auth-only response for redirect is here: ", paymentDetailsResponse.additionalData);
@@ -48,6 +48,7 @@ const componentsInit = async () => {
     // 2) payments call (auth-only)
     const onSubmit = async (state, component) => {
       console.log("component on submit event", state, component);
+
       if (state.isValid) {
         console.log("this is the state.data for /payments call: ", state.data);
 
@@ -56,26 +57,6 @@ const componentsInit = async () => {
         globalBrowserInfo = state.data.browserInfo;
 
         console.log("the paymentMethodDetails: ", paymentMethodDetailsPaymentsAuth);
-
-        /* const requestDataPayments = {
-          ...state.data,
-          paymentMethod: {
-            ...state.data.paymentMethod,
-            // Replace with the desired value
-            holderName: "Hans Wurst"
-          },
-          shopperConversionId: `shopper123`,
-          authenticationData: {
-            authenticationOnly: true,
-            threeDSRequestData: {
-              nativeThreeDS: "preferred"
-            }
-          },
-          metaData: {
-            testData: `1234`
-          }
-        };
-         */
 
         const requestDataPayments = {
           paymentMethod: {
@@ -86,7 +67,6 @@ const componentsInit = async () => {
           billingAddress: state.data.billingAddress,
           deliveryAddress: state.data.deliveryAddress,
           shopperName: state.data.shopperName,
-          //shopperEmail: state.data.shopperEmail,
           shopperIP: state.data.shopperIP,
           amount: {
             currency: "EUR",
@@ -107,17 +87,23 @@ const componentsInit = async () => {
         console.log("this is the requestData for /payments call: ", requestDataPayments);
 
         const paymentResponse = await postDoPayment(requestDataPayments, { url, flow });
+
         if (paymentResponse.resultCode === "Authorised") {
           console.log(`response is ${paymentResponse.resultCode}, unmounting component and rendering result`);
           renderResultTemplate(paymentResponse.resultCode);
         } else {
+          // ✅ Store paymentData in localStorage
+          const paymentData = paymentResponse.action?.paymentData;
+          console.log("Stored paymentDataPaymentsAuth:", paymentData);
+          localStorage.setItem("paymentDataPaymentsAuth", JSON.stringify(paymentData));
+
           console.log("paymentResponse includes an action, passing action to component.handleAction function.");
           component.handleAction(paymentResponse.action);
         }
       }
     };
 
-    // 3) payments/details (3DS step and final authorisation)
+    // 3) payments/details (3DS step)
     const onAdditionalDetails = async (state, component) => {
       console.log("onadditionaldetails event", state);
 
@@ -142,12 +128,10 @@ const componentsInit = async () => {
       // ✅ Save for use in paymentAuthorisationResponse
       paymentDetailsResponseGlobal = paymentDetailsResponse;
 
-      // ✅ Use shared variable from onSubmit for auth call
       console.log("this is payment method for Authorisation: ", paymentMethodDetailsPaymentsAuth);
 
       component.unmount();
 
-      // ✅ Conditionally show "Authorise Payment now!" button if auth was successful
       const authMsg = document.querySelector(".auth-result-msg");
       const authoriseBtn = document.getElementById("authorise-btn");
 
@@ -160,7 +144,6 @@ const componentsInit = async () => {
       }
     };
 
-    //Create config and mount Adyen Drop-in
     const checkoutConfig = {
       paymentMethodsResponse: paymentMethods,
       locale: "en_US",
@@ -189,6 +172,13 @@ export async function paymentAuthorisationResponse() {
     return;
   }
 
+  const paymentDataFromStorage = localStorage.getItem("paymentDataPaymentsAuth");
+
+  if (!paymentDataFromStorage) {
+    console.error("No paymentData found in localStorage. Aborting authorisation.");
+    return;
+  }
+
   const requestDataPaymentsAuthorisation = {
     amount: {
       currency: "EUR",
@@ -196,18 +186,9 @@ export async function paymentAuthorisationResponse() {
     },
     channel: "Web",
     reference: "Auth-only_Authorisation_Test",
+    paymentData: JSON.parse(paymentDataFromStorage),
     mpiData: {
       cavv: paymentDetailsResponseGlobal.additionalData?.cavv,
-      eci: paymentDetailsResponseGlobal.additionalData?.["threeds2.threeDS2Result.eci"],
-      dsTransID: paymentDetailsResponseGlobal.additionalData?.["threeds2.threeDS2Result.dsTransID"],
-      //directory response = transStatus from the ARes (Authentication Response).
-      directoryResponse: paymentDetailsResponseGlobal.additionalData?.["threeds2.threeDS2Result.transStatus"],
-      authenticationResponse: paymentDetailsResponseGlobal.additionalData?.threeDAuthenticatedResponse,
-      threeDSVersion: paymentDetailsResponseGlobal.additionalData?.threeDSVersion,
-      //only Cartes Bancaires
-      //cavvAlgorithm: paymentDetailsResponseGlobal.additionalData?.["threeds2.threeDS2Result.cavvAlgorithm"],
-      //only Cartes Bancaires
-      //paymentDetailsResponseGlobal.additionalData?.["threeds2.threeDS2Result.riskScore"]
       shopperInteraction: "Ecommerce",
       recurringProcessingModel: "CardOnFile",
       authenticationData: {
@@ -219,15 +200,19 @@ export async function paymentAuthorisationResponse() {
   };
 
   console.log("requestData for payments (Authorisation): ", requestDataPaymentsAuthorisation);
-  
-  //Authorisation payments call
-  //postDoPayment is defined/implemented in payments.js (...3dsAuthOnly/frontend/shared/payments.js)
+
+   //Authorisation payments call
+  //postDoPaymentAuthorisation is defined/implemented in payments.js (...3dsAuthOnly/frontend/shared/payments.js)
   const paymentAuthorisationResponse = await postDoPaymentAuthorisation(
     requestDataPaymentsAuthorisation,
     { url, flow }
   );
+
   renderResultTemplate(paymentAuthorisationResponse.resultCode);
   console.log("payments Authorisation response: ", paymentAuthorisationResponse);
+
+  // Optional cleanup
+  localStorage.removeItem("paymentDataPaymentsAuth");
 }
 
 // ✅ Setup click listener and MutationObserver to toggle button visibility
@@ -236,12 +221,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const authMsg = document.querySelector(".auth-result-msg");
 
   if (authoriseBtn) {
-    authoriseBtn.style.display = "none"; // hide by default
-    //authorise button click is calling a function
+    authoriseBtn.style.display = "none";
+    authoriseBtn.addEventListener("click", () => {
+      console.log("Authorisation button clicked");
+    });
     authoriseBtn.addEventListener("click", paymentAuthorisationResponse);
   }
 
-  // Observe dynamic updates to the auth result message
   if (authMsg) {
     const observer = new MutationObserver(() => {
       if (authMsg.textContent.trim() === "AuthenticationFinished") {

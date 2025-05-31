@@ -91,6 +91,7 @@ export class PaymentsService {
    */
   async postPaymentsAuthorisation({ data, url }): Promise<PaymentResponse> {
     console.log("postPaymentsAuthorisation called")
+    console.log("the data obj: ", data)
     const reference = uuid();
 
     const paymentAuthorisationRequestData: PaymentRequest = {
