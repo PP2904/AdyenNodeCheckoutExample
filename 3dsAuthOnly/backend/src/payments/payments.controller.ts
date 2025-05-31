@@ -39,7 +39,7 @@ export class PaymentsController {
   //controller for optional Authorisation on button click
   @Post("/paymentsAuthorisation")
   postPaymentsAuthorisation(@Body() requestBody: any): Promise<any> {
-    return this.paymentService.postForPaymentDetails(requestBody.data);
+    return this.paymentService.postPaymentsAuthorisation(requestBody);
   }
 
 
