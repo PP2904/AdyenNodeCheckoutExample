@@ -92,7 +92,8 @@ export class PaymentsService {
   async postPaymentsAuthorisation({ data, url }): Promise<PaymentResponse> {
     console.log("postPaymentsAuthorisation called")
     console.log("the data obj: ", data)
-    const reference = uuid();
+    const pspDetails = data.metaData.pspRefFromDetails;
+    const reference = `AuthOnlyAuthorisation_${pspDetails}`;
 
     const paymentAuthorisationRequestData: PaymentRequest = {
       ...data, // Spread full frontend payload (browserInfo, paymentMethod, shopperName, etc.)

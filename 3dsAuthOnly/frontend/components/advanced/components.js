@@ -195,6 +195,9 @@ export async function paymentAuthorisationResponse() {
         attemptAuthentication: "never"
       }
     },
+    metaData:{
+      pspRefFromDetails:paymentDetailsResponseGlobal.pspReference
+    },
     paymentMethod: paymentMethodDetailsPaymentsAuth,
     browserInfo: globalBrowserInfo
   };
