@@ -153,6 +153,7 @@ export class PaymentsService {
    */
   async postForPaymentDetails({ details }: { details: PaymentCompletionDetails }): Promise<PaymentDetailsResponse> {
     console.log("postForPaymentDetails called")
+    console.log("this are the details: ", details)
     return await this.paymentsAPI.paymentsDetails({ details });
   }
 
