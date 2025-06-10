@@ -120,24 +120,28 @@ export class PaymentsService {
     return await this.paymentsAPI.payments(paymentAuthorisationRequestData);
   }
 
-    /**
-   * Handle native payments using full frontend data, with fallbacks.
-   */
-   /*  async postForPaymentsAuthorisationNative({ data, url }): Promise<PaymentResponse> {
-     //tbd
-    } */
-
   /**
    * Handle redirect-based payments (3DS2 default flow).
    */
   async postForPaymentsRedirect({ data, url }): Promise<PaymentResponse> {
+    console.log("postForPaymentsRedirect called")
     const reference = uuid();
+
+    const authenticationData: AuthenticationData = {
+      threeDSRequestData: {
+        challengeWindowSize: ThreeDSRequestData.ChallengeWindowSizeEnum._05,
+        nativeThreeDS: ThreeDSRequestData.NativeThreeDSEnum.Preferred,
+      },
+      authenticationOnly: true,
+    };
 
     const paymentRequestData: PaymentRequest = {
       ...data,
 
       reference,
       returnUrl: url,
+      //added authenticationData
+      authenticationData,
       origin: url,
       merchantAccount: this.MERCHANT_ACCOUNT,
 
