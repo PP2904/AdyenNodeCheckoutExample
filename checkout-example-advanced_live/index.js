@@ -28,7 +28,7 @@ dotenv.config({
 const config = new Config();
 config.apiKey = process.env.ADYEN_API_KEY;
 const client = new Client({ config });
-client.setEnvironment("LIVE",process.env.ADYEN_PREFIX.toString);
+client.setEnvironment("LIVE",process.env.ADYEN_PREFIX);
 //client = process.env.ADYEN_ENVIRONMENT;
 const checkout = new CheckoutAPI(client);
 
