@@ -299,7 +299,7 @@ app.get("/result/:type", (req, res) =>
 
 // Process incoming Webhook: get NotificationRequestItem, validate HMAC signature,
 // consume the event asynchronously, send response status code 202
-app.post("/api/webhooks/notifications", async (req, res) => {
+/* app.post("/api/webhooks/notifications", async (req, res) => {
 
   // YOUR_HMAC_KEY from the Customer Area
   const hmacKey = process.env.ADYEN_HMAC_KEY;
@@ -331,7 +331,36 @@ app.post("/api/webhooks/notifications", async (req, res) => {
     res.status(401).send('Invalid HMAC signature');
   }
 
+}); */
+
+app.post("/api/webhooks/notifications", async (req, res) => {
+  const hmacKey = process.env.ADYEN_HMAC_KEY;
+  const validator = new hmacValidator();
+  const notificationRequest = req.body;
+  const notificationRequestItems = notificationRequest.notificationItems;
+
+  const notification = notificationRequestItems[0].NotificationRequestItem;
+  console.log(notification);
+
+  try {
+    if (validator.validateHMAC(notification, hmacKey)) {
+      console.log("Valid HMAC. Processing...");
+      const merchantReference = notification.merchantReference;
+      const eventCode = notification.eventCode;
+      console.log("merchantReference:" + merchantReference + " eventCode:" + eventCode);
+
+      consumeEvent(notification);
+      res.status(202).send(); // or 200 depending on Adyen setup
+    } else {
+      console.log("Invalid HMAC signature.");
+      res.status(401).send('Invalid HMAC signature');
+    }
+  } catch (err) {
+    console.error("HMAC validation failed:", err.message);
+    res.status(400).send('Missing or invalid HMAC signature');
+  }
 });
+
 
 // process payload asynchronously
 function consumeEvent(notification) {
