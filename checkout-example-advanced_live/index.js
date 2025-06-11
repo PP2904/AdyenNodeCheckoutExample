@@ -34,9 +34,10 @@ console.log("ADYEN_MERCHANT_ACCOUNT:", process.env.ADYEN_MERCHANT_ACCOUNT);
 // Adyen Node.js API library boilerplate (configuration, etc.)
 const config = new Config();
 config.apiKey = process.env.ADYEN_API_KEY;
+
 const client = new Client({ config });
-client.setEnvironment("LIVE",process.env.ADYEN_PREFIX);
-//client = process.env.ADYEN_ENVIRONMENT;
+client.setEnvironment(process.env.ADYEN_ENVIRONMENT, process.env.ADYEN_ENVIRONMENT === "LIVE" ? process.env.ADYEN_PREFIX : undefined);
+
 const checkout = new CheckoutAPI(client);
 
 //endpoints properly set?
