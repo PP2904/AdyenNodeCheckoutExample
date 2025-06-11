@@ -145,8 +145,18 @@ async function callServer(url, data) {
     },
   });
 
-  return await res.json();
+  const contentType = res.headers.get("content-type") || "";
+  const text = await res.text();
+
+  if (!contentType.includes("application/json")) {
+    console.error(`Expected JSON but got: ${contentType}`);
+    console.error("Response text:", text);
+    throw new Error("Server response is not JSON.");
+  }
+
+  return JSON.parse(text);
 }
+
 
 // Handles responses sent from your server to the client
 function handleServerResponse(res, component) {

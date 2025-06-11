@@ -24,6 +24,13 @@ dotenv.config({
   path: "./.env",
 });
 
+//checking .env file correct
+console.log("Loaded env vars:");
+console.log("ADYEN_API_KEY:", process.env.ADYEN_API_KEY ? "✔️" : "❌");
+console.log("ADYEN_PREFIX:", process.env.ADYEN_PREFIX);
+console.log("ADYEN_ENVIRONMENT:", process.env.ADYEN_ENVIRONMENT);
+console.log("ADYEN_MERCHANT_ACCOUNT:", process.env.ADYEN_MERCHANT_ACCOUNT);
+
 // Adyen Node.js API library boilerplate (configuration, etc.)
 const config = new Config();
 config.apiKey = process.env.ADYEN_API_KEY;
@@ -31,6 +38,10 @@ const client = new Client({ config });
 client.setEnvironment("LIVE",process.env.ADYEN_PREFIX);
 //client = process.env.ADYEN_ENVIRONMENT;
 const checkout = new CheckoutAPI(client);
+
+//endpoints properly set?
+console.log("MarketPay Endpoint:", client.config.marketPayEndpoint);
+console.log("Terminal API Endpoint:", client.config.terminalApiCloudEndpoint);
 
 app.engine(
   "handlebars",
