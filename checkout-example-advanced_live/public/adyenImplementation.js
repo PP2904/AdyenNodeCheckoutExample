@@ -10,7 +10,8 @@ async function initCheckout() {
       paymentMethodsResponse: paymentMethodsResponse,
       clientKey,
       locale: "en_US",
-      environment: "test",
+      //change to live here too!
+      environment: "live",
       showPayButton: true,
       paymentMethodsConfiguration: {
         ideal: {
