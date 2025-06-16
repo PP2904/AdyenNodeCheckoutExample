@@ -29,6 +29,7 @@ dotenv.config({
 //checking .env file correct
 console.log("Loaded env vars:");
 console.log("ADYEN_API_KEY:", process.env.ADYEN_API_KEY ? "✔️" : "❌");
+console.log("ADYEN_API_KEY:", process.env.ADYEN_API_KEY);
 console.log("ADYEN_PREFIX:", process.env.ADYEN_PREFIX);
 console.log("ADYEN_CLIENT_KEY:", process.env.ADYEN_CLIENT_KEY);
 console.log("ADYEN_ENVIRONMENT:", process.env.ADYEN_ENVIRONMENT);
@@ -65,7 +66,6 @@ app.set("view engine", "handlebars");
 // Get payment methods
 
 console.log("ADYEN_API_KEY loaded:", !!process.env.ADYEN_API_KEY);
-console.log("Merchant Account:", process.env.ADYEN_MERCHANT_ACCOUNT);
 
 app.post("/api/getPaymentMethods", async (req, res) => {
   try {
