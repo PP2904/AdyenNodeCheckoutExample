@@ -1,3 +1,5 @@
+require('dotenv').config({ override: true });
+
 const express = require("express");
 const path = require("path");
 const hbs = require("express-handlebars");
@@ -28,6 +30,7 @@ dotenv.config({
 console.log("Loaded env vars:");
 console.log("ADYEN_API_KEY:", process.env.ADYEN_API_KEY ? "✔️" : "❌");
 console.log("ADYEN_PREFIX:", process.env.ADYEN_PREFIX);
+console.log("ADYEN_CLIENT_KEY:", process.env.ADYEN_CLIENT_KEY);
 console.log("ADYEN_ENVIRONMENT:", process.env.ADYEN_ENVIRONMENT);
 console.log("ADYEN_MERCHANT_ACCOUNT:", process.env.ADYEN_MERCHANT_ACCOUNT);
 
@@ -36,7 +39,7 @@ const config = new Config();
 config.apiKey = process.env.ADYEN_API_KEY;
 
 const client = new Client({ config });
-client.setEnvironment(process.env.ADYEN_ENVIRONMENT, process.env.ADYEN_ENVIRONMENT === "LIVE" ? process.env.ADYEN_PREFIX : undefined);
+client.setEnvironment("LIVE", process.env.ADYEN_PREFIX); // Change to LIVE for production
 
 const checkout = new CheckoutAPI(client);
 
@@ -60,6 +63,10 @@ app.set("view engine", "handlebars");
 //endpoints defined in file: /workspace/AdyenNodeCheckoutExample/checkout-example-advanced live/node_modules/@adyen/api-library/lib/src/service.js
 // and in file: checkout-example-advanced live/node_modules/@adyen/api-library/lib/src/client.js
 // Get payment methods
+
+console.log("ADYEN_API_KEY loaded:", !!process.env.ADYEN_API_KEY);
+console.log("Merchant Account:", process.env.ADYEN_MERCHANT_ACCOUNT);
+
 app.post("/api/getPaymentMethods", async (req, res) => {
   try {
     const response = await checkout.PaymentsApi.paymentMethods({
