@@ -3,18 +3,8 @@ const clientKey = document.getElementById("clientKey").innerHTML;
 //More precisely, innerHTML gets a serialization of the nested child DOM elements within the element, or sets HTML or XML that should be parsed to replace the DOM tree within the element.
 const type = document.getElementById("type").innerHTML;
 
-async function initCheckout() {
-  try {
-    const paymentMethodsResponse = await callServer("/api/getPaymentMethods");
-    const configuration = {
-      paymentMethodsResponse: paymentMethodsResponse,
-      clientKey,
-      locale: "en_US",
-      //change to live here too!
-      environment: "live-in",
-      paymentMethodsConfiguration: {
-        card: {
-          //https://docs.adyen.com/payment-methods/cards/web-drop-in/#configuration
+const cardConfiguration = {
+   //https://docs.adyen.com/payment-methods/cards/web-drop-in/#configuration
           showPayButton: true,
           enableStoreDetails: false,
           showStoredPaymentMethods: false,
@@ -26,8 +16,8 @@ async function initCheckout() {
           name: "Credit or debit card",
   
           amount: {
-            value: 80,
-            currency: "INR",
+            value: 10,
+            currency: "AUD",
           },
           //from https://docs.adyen.com/payment-methods/cards/web-component/#optional-configuration
           //hasHolderName: true, // Show the cardholder name field.
@@ -96,7 +86,19 @@ async function initCheckout() {
             merchantDisplayName: 'YOUR_MERCHANT_NAME',
             shopperEmail: 'pfrommer.peter@gmail.com' // Used to recognize your shopper's Click to Pay account.
           } */
-        },
+};
+
+async function initCheckout() {
+  try {
+    const paymentMethodsResponse = await callServer("/api/getPaymentMethods");
+    const configuration = {
+      paymentMethodsResponse: paymentMethodsResponse,
+      clientKey,
+      locale: "en_US",
+      //change to live here too!
+      environment: "live-au",
+      paymentMethodsConfiguration: {
+        card: cardConfiguration
       }
     };
 

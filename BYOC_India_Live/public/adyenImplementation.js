@@ -3,46 +3,13 @@ const clientKey = document.getElementById("clientKey").innerHTML;
 //More precisely, innerHTML gets a serialization of the nested child DOM elements within the element, or sets HTML or XML that should be parsed to replace the DOM tree within the element.
 const type = document.getElementById("type").innerHTML;
 
-async function initCheckout() {
-  try {
-    const paymentMethodsResponse = await callServer("/api/getPaymentMethods");
-    const configuration = {
-      paymentMethodsResponse: paymentMethodsResponse,
-      clientKey,
-      locale: "en_US",
-      //change to live here too!
-      environment: "live-in",
-      paymentMethodsConfiguration: {
-        card: {
-          //https://docs.adyen.com/payment-methods/cards/web-drop-in/#configuration
-          showPayButton: true,
-          enableStoreDetails: false,
-          showStoredPaymentMethods: false,
-          maskSecurityCode: true,
-          //how does this work?
-          /* disclaimerMessage: {
-            message: "this will charge your live card"
-            }, */
+const cardConfiguration = {
+   //https://docs.adyen.com/payment-methods/cards/web-drop-in/#configuration
           name: "Credit or debit card",
-  
           amount: {
             value: 80,
             currency: "INR",
           },
-          //from https://docs.adyen.com/payment-methods/cards/web-component/#optional-configuration
-          //hasHolderName: true, // Show the cardholder name field.
-          //holderNameRequired: true, // Mark the cardholder name field as required.
-          //billingAddressRequired: true, // Show the billing address input fields and mark them as required.
-          //hideCVC: true,
-          //showPayButton: false,
-          
-          
-          //+++++++
-          //++ Card Component Event Handlers++
-          //from https://docs.adyen.com/payment-methods/cards/web-component/#optional-configuration:~:text=callback.-,Events,-You%20can%20also
-          //+++++++
-          
-          
           onConfigSuccess: (data) => {
             console.log("loaded")
           },
@@ -57,18 +24,6 @@ async function initCheckout() {
             }
             console.log("onSubmit")
           },
-
-          //onSubmit mit 3 second timer
-          /* onSubmit: (state, component) => {
-            console.log("onSubmit baby!");
-            if (state.isValid) {
-              // Add a 3-second timer before calling handleSubmission
-              setTimeout(() => {
-                console.log("Proceeding with payment after 3 seconds...");
-                handleSubmission(state, component, "/api/initiatePayment");
-              }, 3000); // 3-second delay
-            } 
-          }, */
 
           onAdditionalDetails: (state, component) => {
             handleSubmission(state, component, "/api/submitAdditionalDetails");
@@ -88,15 +43,20 @@ async function initCheckout() {
           onBinValue: (state,component) => {
             console.log("onBinValue: ",state)
           }
+};
 
 
-          //click to pay config
-         /*  clickToPayConfiguration: {
-            //Card PAN enrolled for CTP for MC: 5186001700008785
-            merchantDisplayName: 'YOUR_MERCHANT_NAME',
-            shopperEmail: 'pfrommer.peter@gmail.com' // Used to recognize your shopper's Click to Pay account.
-          } */
-        },
+async function initCheckout() {
+  try {
+    const paymentMethodsResponse = await callServer("/api/getPaymentMethods");
+    const configuration = {
+      paymentMethodsResponse: paymentMethodsResponse,
+      clientKey,
+      locale: "en_US",
+      //change to live here too!
+      environment: "live-in",
+      paymentMethodsConfiguration: {
+        card: cardConfiguration
       }
     };
 

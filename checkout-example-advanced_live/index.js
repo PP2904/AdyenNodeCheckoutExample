@@ -29,7 +29,7 @@ dotenv.config({
 //checking .env file correct
 console.log("Loaded env vars:");
 console.log("ADYEN_API_KEY:", process.env.ADYEN_API_KEY ? "✔️" : "❌");
-console.log("ADYEN_API_KEY:", process.env.ADYEN_API_KEY);
+//console.log("ADYEN_API_KEY:", process.env.ADYEN_API_KEY);
 console.log("ADYEN_PREFIX:", process.env.ADYEN_PREFIX);
 console.log("ADYEN_CLIENT_KEY:", process.env.ADYEN_CLIENT_KEY);
 console.log("ADYEN_ENVIRONMENT:", process.env.ADYEN_ENVIRONMENT);
@@ -73,7 +73,7 @@ app.post("/api/getPaymentMethods", async (req, res) => {
       channel: "Web",
       merchantAccount: process.env.ADYEN_MERCHANT_ACCOUNT,
       //important for /paymentMethods to show the storedPaymentMethods
-      shopperReference: "1234",
+      shopperReference: "1234_AUD_LiveTest",
       //separate debit and credit card fields
       //splitCardFundingSources:true
     });
@@ -101,7 +101,7 @@ app.post("/api/initiatePayment", async (req, res) => {
     //define /payments call
     // ideally the data passed here should be computed based on business logic
     const response = await checkout.PaymentsApi.payments({
-      amount: { currency, value: 80 }, 
+      amount: { currency, value: 10 }, 
       reference: orderRef, // required
       merchantAccount: process.env.ADYEN_MERCHANT_ACCOUNT, // required
       channel: "Web", // required
@@ -123,18 +123,7 @@ app.post("/api/initiatePayment", async (req, res) => {
         nativeThreeDS: "preferred"
         } */
       },
-      //special handling for Blik
-      //paymentMethod: req.body.paymentMethod.type.includes("blik") ? { type: "blik"} : req.body.paymentMethod,
       returnUrl: `${protocol}://${localhost}/api/handleShopperRedirect?orderRef=${orderRef}`, // required for 3ds2 redirect flow
-      // special handling for boleto
-      paymentMethod: req.body.paymentMethod.type.includes("boleto")
-        ? { type: "boletobancario_santander" } : req.body.paymentMethod,
-      // below fields are required for Boleto:
-      socialSecurityNumber: req.body.socialSecurityNumber,
-      shopperName: {
-        firstName: "Risky",
-        lastName: "SCA-H"
-    },
       // we strongly recommend that you the billingAddress in your request. 
       // card schemes require this for channel web, iOS, and Android implementations.
       billingAddress: {
@@ -145,7 +134,7 @@ app.post("/api/initiatePayment", async (req, res) => {
         street: "Simon Carmiggeltstraat"
     },
       deliveryDate: new Date("2017-07-17T13:42:40.428+01:00"),
-      shopperStatement: "BYOC India Workshop",
+      shopperStatement: "LiveDemoAUD",
       shopperEmail: "peter.pfrommer@adyen.com",
       shopperLocale: "en_US",
       telephoneNumber: "+31858888138",
@@ -364,30 +353,6 @@ function consumeEvent(notification) {
   
 }
 
-
-
-/* ################# UTILS ###################### */
-
-function findCurrency(type) {
-  switch (type) {
-    case "ach":
-      return "USD";
-    case "wechatpayqr":
-    case "alipay":
-      return "CNY";
-    case "dotpay":
-      return "PLN";
-    case "boletobancario":
-    case "boletobancario_santander":
-      return "BRL";
-    case "blik":
-      return "PLN";
-    default:
-      return "EUR";
-  }
-}
-
-/* ################# end UTILS ###################### */
 
 // Start server
 const PORT = process.env.PORT || 8080;
