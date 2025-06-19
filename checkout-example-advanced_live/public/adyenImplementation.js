@@ -12,26 +12,31 @@ async function initCheckout() {
       locale: "en_US",
       //change to live here too!
       environment: "live-in",
-      showPayButton: true,
       paymentMethodsConfiguration: {
-        ideal: {
-          showImage: true,
-        },
         card: {
-          hasHolderName: true,
-          holderNameRequired: true,
+          //https://docs.adyen.com/payment-methods/cards/web-drop-in/#configuration
+          showPayButton: true,
+          enableStoreDetails: false,
+          showStoredPaymentMethods: false,
+          maskSecurityCode: true,
+          //how does this work?
+          /* disclaimerMessage: {
+            message: "this will charge your live card"
+            }, */
           name: "Credit or debit card",
-          //hideCVC: true,
-          //showPayButton: false,
+  
           amount: {
-            value: 1,
-            currency: "EUR",
+            value: 80,
+            currency: "INR",
           },
           //from https://docs.adyen.com/payment-methods/cards/web-component/#optional-configuration
           //hasHolderName: true, // Show the cardholder name field.
           //holderNameRequired: true, // Mark the cardholder name field as required.
           //billingAddressRequired: true, // Show the billing address input fields and mark them as required.
-
+          //hideCVC: true,
+          //showPayButton: false,
+          
+          
           //+++++++
           //++ Card Component Event Handlers++
           //from https://docs.adyen.com/payment-methods/cards/web-component/#optional-configuration:~:text=callback.-,Events,-You%20can%20also
@@ -75,7 +80,7 @@ async function initCheckout() {
             console.log("that's the component ", component)
           },
 
-          //does not work with Amex?
+          //does not work with Amex - yes, 16 digit PAN needed
           onBinLookup: (state,component) => {
             console.log("onBinLookUp: ",state)
           },
@@ -84,6 +89,7 @@ async function initCheckout() {
             console.log("onBinValue: ",state)
           }
 
+
           //click to pay config
          /*  clickToPayConfiguration: {
             //Card PAN enrolled for CTP for MC: 5186001700008785
@@ -91,27 +97,7 @@ async function initCheckout() {
             shopperEmail: 'pfrommer.peter@gmail.com' // Used to recognize your shopper's Click to Pay account.
           } */
         },
-        paypal: {
-          environment: "live", // Change this to "live" when you are ready to accept live PayPal payments.
-          countryCode: "DE", // Only needed for test. When live, this is retrieved automatically.
-          amount: {
-            currency: "EUR",
-            value: 10000
-                  },
-         //subtype:"sdk"
-        },
-        ratepay: { // Optional configuration for Ratepay Open Invoice
-          visibility: {
-              personalDetails: "hidden", // These fields will not appear on the payment form.
-              billingAddress: "readOnly", // These fields will appear on the payment form,
-                                        //but the shopper cannot edit them.
-              deliveryAddress: "editable" //These fields will appear on the payment form,
-                                        // and the shopper can edit them.
-                                        //This is the default behavior.
-          }
-      },
-      riverty : {},
-      },
+      }
     };
 
     const checkout = await new AdyenCheckout(configuration);

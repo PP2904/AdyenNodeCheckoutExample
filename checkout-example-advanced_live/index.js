@@ -86,7 +86,7 @@ app.post("/api/getPaymentMethods", async (req, res) => {
 
 // submitting a payment
 app.post("/api/initiatePayment", async (req, res) => {
-  const currency = findCurrency(req.body.paymentMethod.type);
+  const currency = "INR"
   // find shopper IP from request
   const shopperIP = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
 
@@ -101,7 +101,7 @@ app.post("/api/initiatePayment", async (req, res) => {
     //define /payments call
     // ideally the data passed here should be computed based on business logic
     const response = await checkout.PaymentsApi.payments({
-      amount: { currency, value: 100 }, // value is 10€ in minor units
+      amount: { currency, value: 80 }, 
       reference: orderRef, // required
       merchantAccount: process.env.ADYEN_MERCHANT_ACCOUNT, // required
       channel: "Web", // required
@@ -119,9 +119,9 @@ app.post("/api/initiatePayment", async (req, res) => {
       authenticationData: {
         attemptAuthentication: "always",
         // add the following line for Native 3DS2 > see also 3ds2-example folder
-        //threeDSRequestData: {
-        //  nativeThreeDS: "preferred"
-        //}
+        /* threeDSRequestData: {
+        nativeThreeDS: "preferred"
+        } */
       },
       //special handling for Blik
       //paymentMethod: req.body.paymentMethod.type.includes("blik") ? { type: "blik"} : req.body.paymentMethod,
@@ -145,22 +145,11 @@ app.post("/api/initiatePayment", async (req, res) => {
         street: "Simon Carmiggeltstraat"
     },
       deliveryDate: new Date("2017-07-17T13:42:40.428+01:00"),
-      shopperStatement: "Aceitar o pagamento até 15 dias após o vencimento.Não cobrar juros. Não aceitar o pagamento com cheque",
-      // below fields are required for Klarna, line items included
-      countryCode: req.body.paymentMethod.type.includes("klarna") ? "DE" : null,
-      countryCode: req.body.paymentMethod.type.includes("paypal") ? "DE" : null,
-      //blik
-      countryCode: req.body.paymentMethod.type.includes("blik") ? "PL" : null,
-      blikCode: "777987",
-      //shopperEmail: "youremail@email.com",
+      shopperStatement: "BYOC India Workshop",
       shopperEmail: "peter.pfrommer@adyen.com",
       shopperLocale: "en_US",
-      //riverty
-      dateOfBirth:new Date("2017-07-17T13:42:40.428+01:00"),
-      //ratepay
       telephoneNumber: "+31858888138",
       //https://hub.is.adyen.com/our-solution/payments/payments-engine/payment-methods/ratepay#technical_configuration
-      deviceFingerprint: "ratepay68",
       lineItems: [
         {
             quantity: 1,
