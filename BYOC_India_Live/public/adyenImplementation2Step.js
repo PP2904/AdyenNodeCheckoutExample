@@ -10,7 +10,7 @@ async function initCheckout() {
       paymentMethodsResponse: paymentMethodsResponse,
       clientKey,
       locale: "en_US",
-      environment: "test",
+      environment: "live-in",
       showPayButton: false,
       paymentMethodsConfiguration: {
         ideal: {
@@ -23,7 +23,7 @@ async function initCheckout() {
           //hideCVC: true,
           showPayButton: false,
           amount: {
-            value: 999,
+            value: 0.01,
             currency: "EUR",
           },
           //from https://docs.adyen.com/payment-methods/cards/web-component/#optional-configuration
@@ -47,7 +47,7 @@ async function initCheckout() {
           } */
         },
         paypal: {
-          environment: "test", // Change this to "live" when you are ready to accept live PayPal payments.
+          environment: "live-in", // Change this to "live" when you are ready to accept live PayPal payments.
           countryCode: "DE", // Only needed for test. When live, this is retrieved automatically.
           amount: {
             currency: "EUR",
