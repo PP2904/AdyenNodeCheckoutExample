@@ -1,3 +1,5 @@
+//FE configs
+
 const clientKey = document.getElementById("clientKey").innerHTML;
 //checkout.handlebars defines the id for the innerHTML
 //More precisely, innerHTML gets a serialization of the nested child DOM elements within the element, or sets HTML or XML that should be parsed to replace the DOM tree within the element.
@@ -11,6 +13,7 @@ const cardConfiguration = {
           enableStoreDetails: false,
           showStoredPaymentMethods: false,
           maskSecurityCode: true,
+          //defines amount displayed in the Component
           amount: {
             value: 80,
             currency: "INR",

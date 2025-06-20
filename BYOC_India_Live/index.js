@@ -1,3 +1,4 @@
+//BE configs
 require('dotenv').config({ override: true });
 
 const express = require("express");
@@ -99,7 +100,6 @@ app.post("/api/initiatePayment", async (req, res) => {
     const protocol = req.socket.encrypted? 'https' : 'http';    
 
     //define /payments call
-    // ideally the data passed here should be computed based on business logic
     const response = await checkout.PaymentsApi.payments({
       amount: { currency, value: 80 }, 
       reference: orderRef, // required
