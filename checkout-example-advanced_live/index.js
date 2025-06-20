@@ -44,9 +44,6 @@ client.setEnvironment("LIVE", process.env.ADYEN_PREFIX); // Change to LIVE for p
 
 const checkout = new CheckoutAPI(client);
 
-//endpoints properly set?
-console.log("MarketPay Endpoint:", client.config.marketPayEndpoint);
-console.log("Terminal API Endpoint:", client.config.terminalApiCloudEndpoint);
 
 app.engine(
   "handlebars",

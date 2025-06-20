@@ -3,9 +3,14 @@ const clientKey = document.getElementById("clientKey").innerHTML;
 //More precisely, innerHTML gets a serialization of the nested child DOM elements within the element, or sets HTML or XML that should be parsed to replace the DOM tree within the element.
 const type = document.getElementById("type").innerHTML;
 
+//config for card component
 const cardConfiguration = {
    //https://docs.adyen.com/payment-methods/cards/web-drop-in/#configuration
           name: "Credit or debit card",
+          showPayButton: true,
+          enableStoreDetails: false,
+          showStoredPaymentMethods: false,
+          maskSecurityCode: true,
           amount: {
             value: 80,
             currency: "INR",
