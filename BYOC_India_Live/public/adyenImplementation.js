@@ -53,6 +53,8 @@ const cardConfiguration = {
           }
 };
 
+//https://docs.adyen.com/online-payments/build-your-integration/advanced-flow/?platform=Web&integration=Drop-in&version=6.16.0#add
+//dropin config where?
 
 async function initCheckout() {
   try {
