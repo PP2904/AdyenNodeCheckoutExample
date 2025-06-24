@@ -123,6 +123,11 @@ app.post("/api/initiatePayment", async (req, res) => {
         nativeThreeDS: "preferred"
         } */
       },
+      //mandate 3DS challenge always
+      threeDS2RequestData: {
+        threeDSRequestorChallengeInd:"04"
+      },
+
       //special handling for Blik
       //paymentMethod: req.body.paymentMethod.type.includes("blik") ? { type: "blik"} : req.body.paymentMethod,
       returnUrl: `${protocol}://${localhost}/api/handleShopperRedirect?orderRef=${orderRef}`, // required for 3ds2 redirect flow
