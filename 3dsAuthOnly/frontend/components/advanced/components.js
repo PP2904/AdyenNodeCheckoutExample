@@ -215,6 +215,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const authoriseBtn = document.getElementById("authorise-btn");
   const authMsg = document.querySelector(".auth-result-msg");
 
+  //authorise button calls paymentAuthorisationResponse > calls postDoPaymentAuthorisation > /payments call
   if (authoriseBtn) {
     authoriseBtn.style.display = "none";
     authoriseBtn.addEventListener("click", () => {

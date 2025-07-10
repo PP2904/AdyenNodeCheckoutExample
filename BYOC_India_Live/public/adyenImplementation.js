@@ -10,8 +10,8 @@ const cardConfiguration = {
    //https://docs.adyen.com/payment-methods/cards/web-drop-in/#configuration
           name: "Credit or debit card",
           showPayButton: true,
-          enableStoreDetails: false,
-          showStoredPaymentMethods: false,
+          enableStoreDetails: true,
+          showStoredPaymentMethods: true,
           maskSecurityCode: true,
           //defines amount displayed in the Component
           amount: {

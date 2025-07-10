@@ -46,6 +46,7 @@ function getCountryAndCurrency(type, providedCountry, providedCurrency) {
     card: { countryCode: "US", currency: "USD" },
     paypal: { countryCode: "US", currency: "USD" },
     twint: { countryCode: "CH", currency: "CHF" }, // Specific config for TWINT
+    alipay_hk: { countryCode: "HK", currency: "HKD" }, // Specific config for alipay hk
   };
 
   // Use provided values if they exist, else fallback to defaults
