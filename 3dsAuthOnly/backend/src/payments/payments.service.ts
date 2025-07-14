@@ -104,9 +104,10 @@ export class PaymentsService {
       origin: url,
       merchantAccount: this.MERCHANT_ACCOUNT,
       //authenticationData overrides the data sent from FE
-      authenticationData:{
+      //does this in the authorisation request make a difference?
+      /* authenticationData:{
         attemptAuthentication:'never',
-      },
+      }, */
       shopperConversionId: `shopper123`,
       metaData: {
             testData: `1234`

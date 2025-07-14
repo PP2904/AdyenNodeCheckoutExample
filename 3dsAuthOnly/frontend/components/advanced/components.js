@@ -126,6 +126,7 @@ const componentsInit = async () => {
       console.log("payments details response for Authorisation: ", paymentDetailsResponse);
 
       paymentDetailsResponseGlobal = paymentDetailsResponse;
+      console.log("this is paymentDetailsResponseGlobal: ", paymentDetailsResponseGlobal);
 
       component.unmount();
 
@@ -183,14 +184,27 @@ export async function paymentAuthorisationResponse() {
     channel: "Web",
     reference: "Auth-only_Authorisation_Test",
     paymentData: JSON.parse(paymentDataFromStorage),
+    shopperInteraction: "Ecommerce",
+    recurringProcessingModel: "CardOnFile",
     mpiData: {
+      //this 3DS data needs to be provided in the authorisation call
+      //https://docs.adyen.com/online-payments/3d-secure/authorize-mpidata/#get-authentication-data
+      authenticationResponse: paymentDetailsResponseGlobal.additionalData?.threeDAuthenticatedResponse,
+      //directoryResponse = trans status from ARes 
+      // Accessing 'threeds2.threeDS2Result.transStatus' as a literal key
+      directoryResponse: paymentDetailsResponseGlobal.additionalData?.['threeds2.threeDS2Result.transStatus'],
+      // cavv seems to be a direct key, so it remains as is
       cavv: paymentDetailsResponseGlobal.additionalData?.cavv,
-      shopperInteraction: "Ecommerce",
-      recurringProcessingModel: "CardOnFile",
-      authenticationData: {
-        attemptAuthentication: "never"
-      }
+      // Accessing 'threeds2.threeDS2Result.dsTransID' as a literal key
+      dsTransID: paymentDetailsResponseGlobal.additionalData?.['threeds2.threeDS2Result.dsTransID'],
+      // Accessing 'threeds2.threeDS2Result.eci' as a literal key
+      eci: paymentDetailsResponseGlobal.additionalData?.['threeds2.threeDS2Result.eci'],
+      threeDSVersion: paymentDetailsResponseGlobal.additionalData?.threeDSVersion,
     },
+      //not needed in authorisation
+      /* authenticationData: {
+        attemptAuthentication: "never"
+      } */
     metaData: {
       pspRefFromDetails: paymentDetailsResponseGlobal.pspReference
     },
