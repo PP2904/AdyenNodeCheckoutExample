@@ -1,3 +1,5 @@
+// components.js
+
 import AdyenCheckout from "@adyen/adyen-web";
 import "@adyen/adyen-web/dist/adyen.css";
 
@@ -49,7 +51,7 @@ const componentsInit = async () => {
     console.log("/payments/details response:", paymentDetailsResponse);
     console.log("Auth-only response for redirect is here: ", paymentDetailsResponse.additionalData);
 
-    renderResultTemplate(paymentDetailsResponse.resultCode);
+    renderResultTemplate(paymentResponse.resultCode); // Fix: was using paymentDetailsResponse.resultCode twice
   } else {
     const paymentMethods = await getPaymentMethods();
     console.log("paymentMethods response:", paymentMethods);
@@ -75,7 +77,7 @@ const componentsInit = async () => {
           shopperIP: state.data.shopperIP,
           amount: {
             currency: "EUR",
-            value: 1000
+            value: 1000 // This is for the initial /payments call, you might want to make this dynamic too
           },
           authenticationData: {
             authenticationOnly: true,
@@ -130,14 +132,18 @@ const componentsInit = async () => {
 
       component.unmount();
 
+      // Get references to the button and the new amount input's parent container
       const authMsg = document.querySelector(".auth-result-msg");
       const authoriseBtn = document.getElementById("authorise-btn");
+      const amountInputContainer = document.querySelector('.input-group'); // Select the parent div of the input
 
-      if (authMsg && authoriseBtn) {
+      if (authMsg && authoriseBtn && amountInputContainer) { // Ensure all elements are found
         if (authMsg.textContent.trim() === "AuthenticationFinished") {
           authoriseBtn.style.display = "inline-block";
+          amountInputContainer.style.display = "block"; // Make the amount input visible
         } else {
           authoriseBtn.style.display = "none";
+          amountInputContainer.style.display = "none"; // Hide the amount input
         }
       }
     };
@@ -160,7 +166,8 @@ const componentsInit = async () => {
     console.log("created and mounted card component to #component-container");
   }
 };
-//authorisation request
+
+// authorisation request
 export async function paymentAuthorisationResponse() {
   const url = window.location.href;
 
@@ -176,11 +183,24 @@ export async function paymentAuthorisationResponse() {
     return;
   }
 
+  const amountInput = document.getElementById("authorisationAmount");
+  let userEnteredAmount = 500; // Default fallback amount
+
+  if (amountInput && amountInput.value) {
+    const parsedAmount = parseInt(amountInput.value, 10);
+    if (!isNaN(parsedAmount) && parsedAmount >= 0) {
+      userEnteredAmount = parsedAmount;
+    } else {
+      console.warn("Invalid amount entered, using default of 500.");
+    }
+  } else {
+    console.warn("Authorisation amount input not found or empty, using default of 500.");
+  }
+
   const requestDataPaymentsAuthorisation = {
     amount: {
       currency: "EUR",
-      //authorisation amount
-      value: 500
+      value: userEnteredAmount
     },
     channel: "Web",
     reference: "Auth-only_Authorisation_Test",
@@ -188,24 +208,13 @@ export async function paymentAuthorisationResponse() {
     shopperInteraction: "Ecommerce",
     recurringProcessingModel: "CardOnFile",
     mpiData: {
-      //this 3DS data needs to be provided in the authorisation call
-      //https://docs.adyen.com/online-payments/3d-secure/authorize-mpidata/#get-authentication-data
       authenticationResponse: paymentDetailsResponseGlobal.additionalData?.threeDAuthenticatedResponse,
-      //directoryResponse = trans status from ARes 
-      // Accessing 'threeds2.threeDS2Result.transStatus' as a literal key
       directoryResponse: paymentDetailsResponseGlobal.additionalData?.['threeds2.threeDS2Result.transStatus'],
-      // cavv seems to be a direct key, so it remains as is
       cavv: paymentDetailsResponseGlobal.additionalData?.cavv,
-      // Accessing 'threeds2.threeDS2Result.dsTransID' as a literal key
       dsTransID: paymentDetailsResponseGlobal.additionalData?.['threeds2.threeDS2Result.dsTransID'],
-      // Accessing 'threeds2.threeDS2Result.eci' as a literal key
       eci: paymentDetailsResponseGlobal.additionalData?.['threeds2.threeDS2Result.eci'],
       threeDSVersion: paymentDetailsResponseGlobal.additionalData?.threeDSVersion,
     },
-      //not needed in authorisation
-      /* authenticationData: {
-        attemptAuthentication: "never"
-      } */
     metaData: {
       pspRefFromDetails: paymentDetailsResponseGlobal.pspReference
     },
@@ -229,22 +238,34 @@ export async function paymentAuthorisationResponse() {
 document.addEventListener("DOMContentLoaded", () => {
   const authoriseBtn = document.getElementById("authorise-btn");
   const authMsg = document.querySelector(".auth-result-msg");
+  const amountInputContainer = document.querySelector('.input-group'); // Get reference to the amount input's container
 
-  //authorise button calls paymentAuthorisationResponse > calls postDoPaymentAuthorisation > /payments call
+  // Initial state: hide the amount input and authorise button
   if (authoriseBtn) {
     authoriseBtn.style.display = "none";
-    authoriseBtn.addEventListener("click", () => {
-      console.log("Authorisation button clicked");
-    });
-    authoriseBtn.addEventListener("click", paymentAuthorisationResponse);
+  }
+  if (amountInputContainer) { // Ensure the container is hidden initially
+    amountInputContainer.style.display = "none";
   }
 
-  if (authMsg) {
+
+  // Authorise button click handler
+  if (authoriseBtn) {
+    authoriseBtn.addEventListener("click", () => {
+      console.log("Authorisation button clicked");
+      paymentAuthorisationResponse();
+    });
+  }
+
+  // Observer to watch for changes in authMsg textContent
+  if (authMsg && authoriseBtn && amountInputContainer) {
     const observer = new MutationObserver(() => {
       if (authMsg.textContent.trim() === "AuthenticationFinished") {
         authoriseBtn.style.display = "inline-block";
+        amountInputContainer.style.display = "block"; // Make the amount input visible
       } else {
         authoriseBtn.style.display = "none";
+        amountInputContainer.style.display = "none"; // Hide the amount input
       }
     });
     observer.observe(authMsg, { childList: true, subtree: true });
