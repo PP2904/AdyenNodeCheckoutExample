@@ -76,7 +76,7 @@ export class PaymentsService {
           },
 
       // Fallbacks
-      amount: data.amount || { currency: "EUR", value: 1000 },
+      amount: data.amount || { currency: "EUR", value: 500 },
       channel: data.channel || PaymentRequest.ChannelEnum.Web,
     };
     console.log("postForPaymentsNative called and the data: ",data)
@@ -114,7 +114,7 @@ export class PaymentsService {
           },
 
       // Fallbacks
-      amount: data.amount || { currency: "EUR", value: 1000 },
+      amount: data.amount || { currency: "EUR", value: 500 },
       channel: data.channel || PaymentRequest.ChannelEnum.Web,
     };  
 

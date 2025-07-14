@@ -160,7 +160,7 @@ const componentsInit = async () => {
     console.log("created and mounted card component to #component-container");
   }
 };
-
+//authorisation request
 export async function paymentAuthorisationResponse() {
   const url = window.location.href;
 
@@ -179,7 +179,8 @@ export async function paymentAuthorisationResponse() {
   const requestDataPaymentsAuthorisation = {
     amount: {
       currency: "EUR",
-      value: 1000
+      //authorisation amount
+      value: 500
     },
     channel: "Web",
     reference: "Auth-only_Authorisation_Test",
