@@ -1,3 +1,4 @@
+// index.js
 const express = require("express");
 const path = require("path");
 const hbs = require("express-handlebars");
@@ -5,36 +6,28 @@ const dotenv = require("dotenv");
 const morgan = require("morgan");
 const { uuid } = require("uuidv4");
 
-const { hmacValidator } = require('@adyen/api-library');
+const { hmacValidator } = require("@adyen/api-library");
 const { Client, Config, CheckoutAPI, RecurringAPI } = require("@adyen/api-library");
+const { SHOPPER_REFERENCE, getAll, put, remove } = require("./storage.js");
 
-const { SHOPPER_REFERENCE, getAll, put, remove } = require('./storage.js')
+// Load environment variables
+dotenv.config({ path: "./.env" });
 
-// init app
 const app = express();
-// setup request logging
 app.use(morgan("dev"));
-// Parse JSON bodies
 app.use(express.json());
-// Parse URL-encoded bodies
 app.use(express.urlencoded({ extended: true }));
-// Serve client from build folder
 app.use(express.static(path.join(__dirname, "/public")));
 
-// enables environment variables by
-// parsing the .env file and assigning it to process.env
-dotenv.config({
-  path: "./.env",
-});
-
-// Adyen Node.js API library boilerplate (configuration, etc.)
+// Adyen client setup
 const config = new Config();
 config.apiKey = process.env.ADYEN_API_KEY;
 const client = new Client({ config });
-client.setEnvironment("TEST");  // change to LIVE for production
+client.setEnvironment("TEST"); // Change to LIVE for production
 const checkout = new CheckoutAPI(client);
 const recurring = new RecurringAPI(client);
 
+// Handlebars view engine
 app.engine(
   "handlebars",
   hbs.engine({
@@ -43,227 +36,101 @@ app.engine(
     helpers: require("./util/helpers"),
   })
 );
-
 app.set("view engine", "handlebars");
 
 /* ################# API ENDPOINTS ###################### */
 
-// Invoke tokenization endpoint
-app.post("/api/tokenization/sessions", async (req, res) => {
-
+// API-only: directly call /payments with encrypted card data
+app.post("/api/payments", async (req, res) => {
+  console.log("PAYMENTS endpoint hit");
+  console.log("Body:", req.body);
   try {
-    // unique ref for the transaction
     const orderRef = uuid();
+    const { paymentMethod } = req.body;
 
-    const host = req.get('host');
-    const protocol = req.socket.encrypted ? 'https' : 'http';
+    const host = req.get("host");
+    const protocol = req.socket.encrypted ? "https" : "http";
 
-    // perform /sessions call
-    const response = await checkout.PaymentsApi.sessions({
-      amount: { currency: "EUR", value: 0 }, // zero-auth transaction
+    const response = await checkout.PaymentsApi.payments({
+      amount: { currency: "EUR", value: 1199 }, // €11.99
       countryCode: "NL",
-      merchantAccount: process.env.ADYEN_MERCHANT_ACCOUNT, // required
-      reference: orderRef, // required: your Payment Reference
+      merchantAccount: process.env.ADYEN_MERCHANT_ACCOUNT,
+      reference: orderRef,
       shopperReference: SHOPPER_REFERENCE,
-      returnUrl: `${protocol}://${host}/checkout?orderRef=${orderRef}`, // set redirect URL required for some payment methods (ie iDEAL)
-      channel: "Web",
-      // recurring payment settings
       shopperInteraction: "Ecommerce",
       recurringProcessingModel: "Subscription",
-      enableRecurring: true
+      enableRecurring: true,
+      returnUrl: `${protocol}://${host}/result/success`,
+      paymentMethod, // encrypted card data from frontend
+      channel: "Web",
     });
 
-    console.log(response);
-
+    console.log("Payment API Response:", response);
     res.json(response);
-
   } catch (err) {
-    console.error(`Error: ${err.message}, error code: ${err.errorCode}`);
-    res.status(err.statusCode).json(err.message);
+    console.error(`Error: ${err.message}, code: ${err.errorCode}`);
+    res.status(err.statusCode || 500).json({ message: err.message });
   }
-
 });
 
+/* ################# CLIENT ROUTES ###################### */
 
-/* ################# end API ENDPOINTS ###################### */
-
-/* ################# CLIENT SIDE ENDPOINTS ###################### */
-
-// Index (select a demo)
-app.get("/", (req, res) => 
-  res.render("index", {
-    title: "Adyen Subscription Shopper View"
-  })
-);
-
-// Cart (continue to checkout)
-app.get("/preview", (req, res) =>
-  res.render("preview", {
-    type: req.query.type,
-  })
-);
-
-// Payment Form (for API only)
-app.get("/payment-form", (req, res) =>
+app.get("/", (req, res) =>
   res.render("payment-form", {
-    type: req.query.type,
-    clientKey: process.env.ADYEN_CLIENT_KEY
+    title: "Adyen API-only Card Payment",
+    clientKey: process.env.ADYEN_CLIENT_KEY,
   })
 );
 
-// Admin Panel page
-app.get("/admin", (req, res) =>
-  res.render("admin/index", {
-    title: "Adyen Subscription Admin View",
-    data: getAll()
-  })
-);
-
-// Result page
 app.get("/result/:type", (req, res) =>
-  res.render("result", {
-    type: req.params.type,
-  })
+  res.render("result", { type: req.params.type })
 );
-
-// Invoke to make a payment
-app.get("/admin/makepayment/", async (req, res) => {
-
-  console.log("/admin/makepayment/" + req.params.recurringDetailReference);
-
-  let result = "success"
-
-  try {
-    const response = await checkout.PaymentsApi.payments({
-      amount: { currency: "EUR", value: 1199 },
-      reference: uuid(),
-      shopperInteraction: "Ecommerce",
-      //recurringProcessingModel: "Ecommerce",
-      merchantAccount: process.env.ADYEN_MERCHANT_ACCOUNT,
-      shopperReference: SHOPPER_REFERENCE,
-      paymentMethod: {
-        //tbd
-      }
-    });
-    console.log(response);
-
-    if (response.resultCode == "Authorised") {
-      result = "success";
-    } else {
-      result = "error";
-    }
-
-  } catch (err) {
-    console.error(`Error: ${err.message}, error code: ${err.errorCode}`);
-    result = "error"
-  }
-
-  // Make Payment page
-  res.render("admin/makePayment", {
-    type: result,
-    recurringDetailReference: req.params.recurringDetailReference
-  })
-
-});
-
-// Invoke to disable a token
-app.get("/admin/disable/:recurringDetailReference", async (req, res) => {
-
-  console.log("/admin/disable/" + req.params.recurringDetailReference);
-
-  let ret = "success"
-
-  try {
-    const response = await recurring.disable({
-      merchantAccount: process.env.ADYEN_MERCHANT_ACCOUNT,
-      shopperReference: SHOPPER_REFERENCE,
-      recurringDetailReference: req.params.recurringDetailReference
-    });
-    console.log(response);
-
-    // remove tokens from list
-    remove(req.params.recurringDetailReference);
-
-  } catch (err) {
-    console.error(`Error: ${err.message}, error code: ${err.errorCode}`);
-    ret = "error"
-  }
-
-  // Disable page
-  res.render("admin/disable", {
-    type: ret,
-    recurringDetailReference: req.params.recurringDetailReference
-  })
-
-});
-
-
-/* ################# end CLIENT SIDE ENDPOINTS ###################### */
 
 /* ################# WEBHOOK ###################### */
 
-// Process incoming Webhook: get NotificationRequestItem, validate HMAC signature,
-// consume the event asynchronously, send response status code 202
 app.post("/api/webhooks/notifications", async (req, res) => {
-
-  // YOUR_HMAC_KEY from the Customer Area
   const hmacKey = process.env.ADYEN_HMAC_KEY;
-  const validator = new hmacValidator()
-  // Notification Request JSON
+  const validator = new hmacValidator();
   const notificationRequest = req.body;
-  const notificationRequestItems = notificationRequest.notificationItems
-
-  // fetch first (and only) NotificationRequestItem
-  const notification = notificationRequestItems[0].NotificationRequestItem
+  const notification = notificationRequest.notificationItems[0].NotificationRequestItem;
 
   if (!validator.validateHMAC(notification, hmacKey)) {
-    // invalid hmac
-    console.log("Invalid HMAC signature: " + notification);
-    res.status(401).send('Invalid HMAC signature');
-    return;
+    console.log("Invalid HMAC signature.");
+    return res.status(401).send("Invalid HMAC signature");
   }
 
-  console.log("-- webhook payload ------");
+  console.log("-- Webhook payload ------");
   console.log(notification);
 
-  // valid hmac: process event
+  const shopperReference = notification.additionalData["recurring.shopperReference"];
 
-  const shopperReference = notification.additionalData['recurring.shopperReference'];
-  
-  // read about eventcode "RECURRING_CONTRACT" here: https://docs.adyen.com/online-payments/tokenization/create-and-use-tokens?tab=subscriptions_2#pending-and-refusal-result-codes-1
-  if (notification.eventCode == "RECURRING_CONTRACT" && shopperReference) {
-    // webhook with recurring token
-    const recurringDetailReference = notification.additionalData['recurring.recurringDetailReference'];
+  if (notification.eventCode === "RECURRING_CONTRACT" && shopperReference) {
+    const recurringDetailReference =
+      notification.additionalData["recurring.recurringDetailReference"];
     const paymentMethod = notification.paymentMethod;
 
-    console.log("Recurring authorized - recurringDetailReference:" + recurringDetailReference + " shopperReference:" + shopperReference +
-      " paymentMethod:" + paymentMethod);
-
-    // save token
-    put(recurringDetailReference, paymentMethod, shopperReference)
-
-  } else if (notification.eventCode == "AUTHORISATION") {
-    // webhook with payment authorisation
-    console.log("Payment authorized - pspReference:" + notification.pspReference + " eventCode:" + notification.eventCode);
+    console.log(
+      `Recurring token stored: ${recurringDetailReference} for shopper ${shopperReference}`
+    );
+    put(recurringDetailReference, paymentMethod, shopperReference);
+  } else if (notification.eventCode === "AUTHORISATION") {
+    console.log(`Payment authorised: ${notification.pspReference}`);
   } else {
-    console.log("Unexpected eventCode: " + notification.eventCode);
+    console.log(`Unhandled event: ${notification.eventCode}`);
   }
-  
-  // acknowledge event has been consumed
-  res.status(202).send(); // Send a 202 response with an empty body
 
+  res.status(202).send();
 });
 
+//Test if backend/server is reachable
+app.post("/api/payments-test", (req, res) => {
+  console.log("Body received:", req.body);
+  res.json({ ok: true, body: req.body });
+});
 
-/* ################# end WEBHOOK ###################### */
+/* ################# SERVER ###################### */
 
-/* ################# UTILS ###################### */
-
-function getPort() {
-  return process.env.PORT || 8080;
-}
-
-/* ################# end UTILS ###################### */
-
-// Start server
-app.listen(getPort(), () => console.log(`Server started -> http://localhost:${getPort()}`));
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () =>
+  console.log(`✅ Server running → http://localhost:${PORT}`)
+);
